@@ -328,7 +328,8 @@ class Parser
                         memberComments ~= extractComment(ln);
                         if (ln.startsWith("/**") || ln.startsWith("/*"))
                         {
-                            while (currentLine < lines.length && !lines[currentLine].strip().endsWith("*/"))
+                            while (currentLine < lines.length
+                                    && !lines[currentLine].strip().endsWith("*/"))
                             {
                                 currentLine++;
                                 if (currentLine < lines.length)
@@ -353,10 +354,11 @@ class Parser
                     else if (ln.startsWith("class ") || ln.startsWith("struct ")
                             || ln.startsWith("interface ") || ln.startsWith("enum "))
                     {
-                         memberComments = [];
+                        memberComments = [];
                     }
-                    else if (ln.length > 0 && !ln.startsWith("//") && !ln.startsWith("}")
-                            && !ln.startsWith("{") && braceBalance == 1 && ln.endsWith(";"))
+                    else if (ln.length > 0 && !ln.startsWith("//")
+                            && !ln.startsWith("}") && !ln.startsWith("{")
+                            && braceBalance == 1 && ln.endsWith(";"))
                     {
                         doc.fields ~= ln;
                         memberComments = [];
@@ -488,7 +490,8 @@ class HTMLGenerator
             foreach (cls; mod.classes)
             {
                 content.put("<div class=\"class-doc\">\n");
-                content.put(format("<h3 id=\"%s\">%s %s</h3>\n", escapeHTML(cls.name), escapeHTML(cls.type), escapeHTML(cls.name)));
+                content.put(format("<h3 id=\"%s\">%s %s</h3>\n",
+                        escapeHTML(cls.name), escapeHTML(cls.type), escapeHTML(cls.name)));
 
                 if (cls.comments.length > 0)
                 {
@@ -506,7 +509,8 @@ class HTMLGenerator
                     content.put("<h4>Fields</h4>\n");
                     foreach (field; cls.fields)
                     {
-                        content.put(format("<div class=\"field-code\"><code>%s</code></div>\n", linkify(field)));
+                        content.put(format("<div class=\"field-code\"><code>%s</code></div>\n",
+                                linkify(field)));
                     }
                     content.put("</div>\n");
                 }
