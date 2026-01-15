@@ -559,7 +559,7 @@ class HTMLGenerator
                         content.put(
                                 "<div class=\"bg-code-bg rounded-lg p-4 border border-border-color\">\n");
                         content.put("<div class=\"font-mono text-sm mb-2\">\n");
-                        content.put(format("<span class=\"text-pink-400\">%s</span> ",
+                        content.put(format("<span class=\"text-red-400\">%s</span> ",
                                 escapeHTML(func.returnType)));
                         content.put(format("<span class=\"text-blue-400 font-semibold\">%s</span>",
                                 escapeHTML(func.name)));
@@ -619,7 +619,7 @@ class HTMLGenerator
             {
                 content.put("<div class=\"bg-gray-800/40 rounded-lg p-5 border border-border-color hover:border-blue-500/50 transition-colors\">\n");
                 content.put("<div class=\"font-mono text-sm mb-3\">\n");
-                content.put(format("<span class=\"text-pink-400\">%s</span> ",
+                content.put(format("<span class=\"text-red-400\">%s</span> ",
                         escapeHTML(func.returnType)));
                 content.put(format("<span class=\"text-blue-400 font-semibold text-base\">%s</span>",
                         escapeHTML(func.name)));
