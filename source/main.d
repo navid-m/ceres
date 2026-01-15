@@ -915,9 +915,27 @@ void main(string[] args)
     string outputDir = "docs";
     writeln("Generating documentation in ./", outputDir);
 
-    auto generator = new HTMLGenerator(modules, outputDir, projectInfo.projectName);
+    auto generator = new HTMLGenerator(modules, outputDir, toTitleCase(projectInfo.projectName));
     generator.generate();
 
     writeln("Documentation generated successfully.");
     writeln("Open ", buildPath(outputDir, "index.html"), " to view");
+}
+
+private string toTitleCase(string input)
+{
+    import std.ascii;
+    import std.string;
+    import std.uni;
+    import std.conv : to;
+
+    auto words = input.toLower.split;
+
+    string[] titleCasedWords;
+    foreach (word; words)
+    {
+        titleCasedWords ~= word.asCapitalized.to!string;
+    }
+
+    return titleCasedWords.join(" ");
 }
