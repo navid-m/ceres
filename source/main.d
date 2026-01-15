@@ -47,7 +47,7 @@ struct ClassDoc
 }
 
 /**
- * A enum member documentation.
+ * A enum member documentation, similar to $(LREF FieldDoc), but for enums.
  */
 struct EnumMemberDoc
 {
@@ -1069,7 +1069,7 @@ class HTMLGenerator
             content.put(
                     "<section class=\"bg-card-bg rounded-xl p-6 shadow-lg border border-border-color\">\n");
             content.put("<div class=\"prose prose-invert max-w-none\">\n");
-            content.put(formatComment(mod.comments));
+            content.put(formatComment(mod.comments, mod.name));
             content.put("</div>\n");
             content.put("</section>\n");
         }
@@ -1094,7 +1094,7 @@ class HTMLGenerator
                 if (cls.comments.length > 0)
                 {
                     content.put("<div class=\"mb-4 pl-4 border-l-2 border-red-500/50\">\n");
-                    content.put(formatComment(cls.comments));
+                    content.put(formatComment(cls.comments, mod.name));
                     content.put("</div>\n");
                 }
 
@@ -1148,7 +1148,7 @@ class HTMLGenerator
                         if (func.comments.length > 0)
                         {
                             content.put("<div class=\"mt-2 pl-3 border-l border-blue-500/50\">\n");
-                            content.put(formatComment(func.comments));
+                            content.put(formatComment(func.comments, mod.name));
                             content.put("</div>\n");
                         }
                         content.put("</div>\n");
@@ -1184,7 +1184,7 @@ class HTMLGenerator
                 if (en.comments.length > 0)
                 {
                     content.put("<div class=\"mb-4 pl-4 border-l-2 border-red-500/50\">\n");
-                    content.put(formatComment(en.comments));
+                    content.put(formatComment(en.comments, mod.name));
                     content.put("</div>\n");
                 }
 
@@ -1209,7 +1209,7 @@ class HTMLGenerator
                         {
                             content.put(
                                     "<div class=\"mt-2 pl-3 border-l border-blue-500/50 text-gray-400\">\n");
-                            content.put(formatComment(member.comments));
+                            content.put(formatComment(member.comments, mod.name));
                             content.put("</div>\n");
                         }
                         content.put("</div>\n");
@@ -1256,7 +1256,7 @@ class HTMLGenerator
                 if (func.comments.length > 0)
                 {
                     content.put("<div class=\"pl-4 border-l-2 border-red-500/50 mt-3\">\n");
-                    content.put(formatComment(func.comments));
+                    content.put(formatComment(func.comments, mod.name));
                     content.put("</div>\n");
                 }
 
@@ -1274,7 +1274,24 @@ class HTMLGenerator
         f.close();
     }
 
-    private string formatComment(string[] comments)
+    private string processMacros(string text, string currentModule)
+    {
+        string processed = escapeHTML(text);
+
+        auto lrefRe = regex(`\$\(LREF\s+([^)]+)\)`);
+        processed = processed.replaceAll!(match => format(
+                "<a href=\"#%s\" class=\"text-blue-400 hover:text-blue-300 transition-colors\">%s</a>",
+                match[1], match[1]))(lrefRe);
+
+        auto refRe = regex(`\$\(REF\s+([^,]+),\s*([^)]+)\)`);
+        processed = processed.replaceAll!(match => format(
+                "<a href=\"%s.html#%s\" class=\"text-blue-400 hover:text-blue-300 transition-colors\">%s</a>",
+                sanitizeFilename(match[2]), match[1], match[1]))(refRe);
+
+        return processed;
+    }
+
+    private string formatComment(string[] comments, string currentModule)
     {
         auto app = appender!string;
         bool insideParams = false;
@@ -1303,7 +1320,7 @@ class HTMLGenerator
 
                 string content = trimmed[8 .. $].strip();
                 app.put(format("<div class=\"mt-4 text-gray-300\"><span class=\"font-bold text-gray-200\">Returns:</span> %s</div>\n",
-                        escapeHTML(content)));
+                        processMacros(content, currentModule)));
                 continue;
             }
 
@@ -1318,19 +1335,19 @@ class HTMLGenerator
                     string pName = trimmed[0 .. eqPos].strip();
                     string pDesc = trimmed[eqPos + 1 .. $].strip();
                     app.put(format("<li><span class=\"font-mono text-blue-300 font-semibold\">%s</span> <span class=\"text-gray-400\">%s</span></li>\n",
-                            escapeHTML(pName), escapeHTML(pDesc)));
+                            escapeHTML(pName), processMacros(pDesc, currentModule)));
                 }
                 else
                 {
                     app.put(format("<div class=\"text-gray-400 ml-4\">%s</div>\n",
-                            escapeHTML(trimmed)));
+                            processMacros(trimmed, currentModule)));
                 }
             }
             else
             {
                 if (trimmed.length > 0)
                     app.put(format("<p class=\"text-gray-300 leading-relaxed\">%s</p>\n",
-                            escapeHTML(trimmed)));
+                            processMacros(trimmed, currentModule)));
             }
         }
 
