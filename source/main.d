@@ -1302,6 +1302,20 @@ void main(string[] args)
         targetPath = args[1];
     }
 
+    if (args.canFind("--help") || args.canFind("-h"))
+    {
+        writeln("usage: ceres <dir-or-file>\n");
+        writeln("  --version     display version info and exit");
+        writeln("  --help        display this help and exit");
+        return;
+    }
+
+    if (args.canFind("--version") || args.canFind("-v"))
+    {
+        writeln("v0.0.1");
+        return;
+    }
+
     if (!exists(targetPath))
     {
         stderr.writeln("Error: Path does not exist: ", targetPath);
