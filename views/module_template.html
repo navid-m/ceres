@@ -24,16 +24,26 @@
     <div class="container mx-auto px-4 py-8 max-w-6xl">
         <header class="mb-8">
             <div class="bg-card-bg rounded-2xl p-8 shadow-2xl border border-border-color">
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
                     <a href="index.html" class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors group">
                         <svg class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
                         Back to Index
                     </a>
-                    <div class="relative w-64">
-                        <input type="text" id="global-search" placeholder="Search docs..." class="w-full bg-gray-900 border border-border-color rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 placeholder-gray-500">
-                        <div id="search-results" class="absolute z-50 w-full mt-2 bg-card-bg border border-border-color rounded-lg shadow-xl hidden max-h-96 overflow-y-auto"></div>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 text-gray-300 cursor-pointer hover:text-white transition-colors">
+                            <input type="checkbox" id="hide-private-functions-checkbox" class="rounded text-blue-500 focus:ring-blue-400">
+                            <span class="select-none">Hide Private Functions</span>
+                        </label>
+                        <label class="flex items-center gap-2 text-gray-300 cursor-pointer hover:text-white transition-colors">
+                            <input type="checkbox" id="hide-private-fields-checkbox" class="rounded text-blue-500 focus:ring-blue-400">
+                            <span class="select-none">Hide Private Attributes</span>
+                        </label>
+                        <div class="relative w-64">
+                            <input type="text" id="global-search" placeholder="Search docs..." class="w-full bg-gray-900 border border-border-color rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 placeholder-gray-500">
+                            <div id="search-results" class="absolute z-50 w-full mt-2 bg-card-bg border border-border-color rounded-lg shadow-xl hidden max-h-96 overflow-y-auto"></div>
+                        </div>
                     </div>
                 </div>
                 <h1 class="text-4xl font-bold text-white mb-2">{{module_name}}</h1>
@@ -85,19 +95,37 @@
             }
         });
 
-        const filterInput = document.getElementById('module-filter');
-        filterInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            
-            document.querySelectorAll('main section .bg-gray-800\\/40').forEach(el => {
-                const text = el.textContent.toLowerCase();
-                if (text.includes(query)) {
-                    el.style.display = 'block';
-                } else {
-                    el.style.display = 'none';
-                }
+        const hidePrivateFunctionsCheckbox = document.getElementById('hide-private-functions-checkbox');
+        if (hidePrivateFunctionsCheckbox) {
+            hidePrivateFunctionsCheckbox.addEventListener('change', function() {
+                const privateFunctions = document.querySelectorAll('.private-function, .private-method');
+                const showPrivateFunctions = !this.checked;
+
+                privateFunctions.forEach(function(element) {
+                    if (showPrivateFunctions) {
+                        element.style.display = '';
+                    } else {
+                        element.style.display = 'none';
+                    }
+                });
             });
-        });
+        }
+
+        const hidePrivateFieldsCheckbox = document.getElementById('hide-private-fields-checkbox');
+        if (hidePrivateFieldsCheckbox) {
+            hidePrivateFieldsCheckbox.addEventListener('change', function() {
+                const privateFields = document.querySelectorAll('.private-field');
+                const showPrivateFields = !this.checked;
+
+                privateFields.forEach(function(element) {
+                    if (showPrivateFields) {
+                        element.style.display = '';
+                    } else {
+                        element.style.display = 'none';
+                    }
+                });
+            });
+        }
     </script>
 </body>
 </html>

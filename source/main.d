@@ -19,6 +19,18 @@ struct FunctionDoc
     string[] parameters;
     string[] comments;
     size_t lineNumber;
+    bool isPrivate;
+}
+
+/**
+ * A field documentation.
+ */
+struct FieldDoc
+{
+    string declaration;
+    string[] comments;
+    size_t lineNumber;
+    bool isPrivate;
 }
 
 /**
@@ -30,7 +42,7 @@ struct ClassDoc
     string type;
     string[] comments;
     FunctionDoc[] methods;
-    string[] fields;
+    FieldDoc[] fields;
     size_t lineNumber;
 }
 
@@ -330,6 +342,15 @@ class Parser
         doc.comments = comments;
         doc.lineNumber = currentLine + 1;
 
+        string trimmed = line.strip();
+        doc.isPrivate = trimmed.startsWith("private ") || trimmed.startsWith("private static ")
+            || trimmed.startsWith("private final ") || trimmed.startsWith(
+                    "private override ") || trimmed.startsWith("private abstract ")
+            || trimmed.startsWith("private const ") || trimmed.startsWith(
+                    "private immutable ") || trimmed.startsWith("private shared ")
+            || trimmed.startsWith("private pure ") || trimmed.startsWith("private nothrow ")
+            || (trimmed.startsWith("private") && !trimmed.startsWith("private(")); // Handle cases like "private void func(..."
+
         auto parenPos = line.indexOf("(");
         auto closeParenPos = line.indexOf(")");
 
@@ -340,7 +361,6 @@ class Parser
 
         auto beforeParen = line[0 .. parenPos].strip().split();
 
-        string trimmed = line.strip();
         if (trimmed.startsWith("this") || trimmed.indexOf(" this(") != -1)
         {
             doc.name = "this";
@@ -511,7 +531,15 @@ class Parser
                             && !ln.startsWith("}") && !ln.startsWith("{")
                             && braceBalance == 1 && ln.endsWith(";"))
                     {
-                        doc.fields ~= ln;
+                        FieldDoc fieldDoc;
+                        fieldDoc.declaration = ln;
+                        fieldDoc.comments = memberComments;
+                        fieldDoc.lineNumber = currentLine + 1;
+                        fieldDoc.isPrivate = ln.strip().startsWith("private ") || ln.strip()
+                            .startsWith("private static ") || ln.strip().startsWith("private final ") || ln.strip()
+                            .startsWith("private const ") || ln.strip().startsWith("private immutable ")
+                            || ln.strip().startsWith("private shared ");
+                        doc.fields ~= fieldDoc;
                         memberComments = [];
                         lastMemberDocComment = [];
                     }
@@ -732,8 +760,9 @@ class HTMLGenerator
                     content.put("<div class=\"space-y-2\">\n");
                     foreach (field; cls.fields)
                     {
-                        content.put("<div class=\"bg-code-bg rounded p-3 border border-border-color font-mono text-sm text-gray-300\">\n");
-                        content.put(linkify(field) ~ "\n");
+                        string privateClass = field.isPrivate ? " private-field" : "";
+                        content.put("<div class=\"bg-code-bg rounded p-3 border border-border-color font-mono text-sm text-gray-300" ~ privateClass ~ "\">\n");
+                        content.put(linkify(field.declaration) ~ "\n");
                         content.put("</div>\n");
                     }
                     content.put("</div>\n");
@@ -749,9 +778,10 @@ class HTMLGenerator
                     foreach (func; cls.methods)
                     {
                         string methodId = cls.name ~ "." ~ func.name;
+                        string privateClass = func.isPrivate ? " private-method" : "";
                         content.put(format(
-                                "<div id=\"%s\" class=\"bg-code-bg rounded-lg p-4 border border-border-color\">\n",
-                                escapeHTML(methodId)));
+                                "<div id=\"%s\" class=\"bg-code-bg rounded-lg p-4 border border-border-color%s\">\n",
+                                escapeHTML(methodId), privateClass));
                         content.put("<div class=\"font-mono text-sm\">\n");
                         content.put(format("<span class=\"text-red-400\">%s</span> ",
                                 escapeHTML(func.returnType)));
@@ -807,8 +837,9 @@ class HTMLGenerator
 
             foreach (func; mod.functions)
             {
-                content.put(format("<div id=\"%s\" class=\"bg-gray-800/40 rounded-lg p-5 border border-border-color hover:border-blue-500/50 transition-colors\">\n",
-                        escapeHTML(func.name)));
+                string privateClass = func.isPrivate ? " private-function" : "";
+                content.put(format("<div id=\"%s\" class=\"bg-gray-800/40 rounded-lg p-5 border border-border-color hover:border-blue-500/50 transition-colors%s\">\n",
+                        escapeHTML(func.name), privateClass));
                 content.put("<div class=\"font-mono text-sm mb-3\">\n");
                 content.put(format("<span class=\"text-red-400\">%s</span> ",
                         escapeHTML(func.returnType)));
