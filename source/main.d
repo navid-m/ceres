@@ -869,7 +869,7 @@ class HTMLGenerator
         string licenseInfo = "";
         if (licenseType.length > 0)
         {
-            licenseInfo = "License: " ~ escapeHTML(licenseType);
+            licenseInfo = escapeHTML(licenseType);
         }
         output = output.replace("{{license_info}}", licenseInfo);
 
@@ -1141,7 +1141,7 @@ ProjectInfo detectProject(string path)
             else if (content.canFind("Apache License 2.0") || content.canFind("Apache-2.0"))
                 info.licenseType = "Apache 2.0";
             else if (content.canFind("GNU General Public License") || content.canFind("GPL"))
-                info.licenseType = "GPL";
+                info.licenseType = "GNU General Public License";
             else if (content.canFind("BSD 3-Clause"))
                 info.licenseType = "BSD 3-Clause";
             else if (content.canFind("BSD 2-Clause"))
@@ -1153,7 +1153,7 @@ ProjectInfo detectProject(string path)
             else if (content.canFind("The Unlicense"))
                 info.licenseType = "Unlicense";
             else
-                info.licenseType = "Custom";
+                info.licenseType = "Custom License / Proprietary";
         }
         catch (Exception e)
         {
@@ -1170,7 +1170,7 @@ ProjectInfo detectProject(string path)
             else if (content.canFind("Apache License 2.0") || content.canFind("Apache-2.0"))
                 info.licenseType = "Apache 2.0";
             else if (content.canFind("GNU General Public License") || content.canFind("GPL"))
-                info.licenseType = "GPL";
+                info.licenseType = "GNU General Public License";
             else if (content.canFind("BSD 3-Clause"))
                 info.licenseType = "BSD 3-Clause";
             else if (content.canFind("BSD 2-Clause"))
@@ -1182,7 +1182,7 @@ ProjectInfo detectProject(string path)
             else if (content.canFind("The Unlicense"))
                 info.licenseType = "Unlicense";
             else
-                info.licenseType = "Custom";
+                info.licenseType = "Custom License / Proprietary";
         }
         catch (Exception e)
         {
