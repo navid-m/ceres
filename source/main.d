@@ -318,6 +318,14 @@ class Parser
         return line.strip();
     }
 
+    /** 
+     * Extract the module name given the filepath.
+     *
+     * Params:
+     *   filepath = The filepath of the source file
+     * 
+     * Returns: The module name 
+     */
     private string extractModuleName(string filepath) => baseName(filepath, ".d");
 
     private string extractModuleDeclaration(string line)
@@ -1314,7 +1322,8 @@ class HTMLGenerator
                     app.put("</tbody></table>\n");
                 insideParams = true;
                 app.put("<div class=\"font-bold text-gray-200 mt-4 mb-2\">Params:</div>\n");
-                app.put("<table class=\"w-full text-left border-collapse mb-4 border border-gray-600\">\n<tbody>\n");
+                app.put(
+                        "<table class=\"w-full text-left border-collapse mb-4 border border-gray-600\">\n<tbody>\n");
                 continue;
             }
 
