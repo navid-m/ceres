@@ -80,21 +80,15 @@ class Parser
                         {
                             string commentLine = lines[currentLine].strip();
                             if (commentLine != "*/")
-                            {
                                 pendingComments ~= extractComment(commentLine);
-                            }
                         }
                     }
                 }
             }
             else if (line.startsWith("module "))
-            {
                 doc.name = extractModuleDeclaration(line);
-            }
             else if (line.startsWith("import "))
-            {
                 doc.imports ~= line;
-            }
             else if (line.length > 0 && !line.startsWith("//"))
             {
                 if (line.startsWith("class ") || line.startsWith("struct ")
@@ -102,24 +96,18 @@ class Parser
                 {
                     auto classDoc = parseClass(line, pendingComments);
                     if (classDoc.name.length > 0)
-                    {
                         doc.classes ~= classDoc;
-                    }
                     pendingComments = [];
                 }
                 else if (isFunction(line))
                 {
                     auto funcDoc = parseFunction(line, pendingComments);
                     if (funcDoc.name.length > 0)
-                    {
                         doc.functions ~= funcDoc;
-                    }
                     pendingComments = [];
                 }
                 else if (!line.startsWith("{") && !line.startsWith("}"))
-                {
                     pendingComments = [];
-                }
             }
         }
 
