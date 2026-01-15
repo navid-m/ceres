@@ -945,23 +945,12 @@ class HTMLGenerator
         {
             content.put(
                     "<section class=\"bg-card-bg rounded-xl shadow-lg border border-border-color overflow-hidden\">\n");
-            content.put(
-                    "<div class=\"p-6 border-b border-border-color bg-gradient-to-r from-blue-900/20 to-transparent\">\n");
-            content.put(
-                    "<h2 class=\"text-2xl font-semibold text-white flex items-center gap-2\">\n");
-            content.put(
-                    "<svg class=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n");
-            content.put("<path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z\"></path>\n");
-            content.put("</svg>\n");
-            content.put("Functions\n");
-            content.put("</h2>\n");
-            content.put("</div>\n");
             content.put("<div class=\"p-6 space-y-4\">\n");
 
             foreach (func; mod.functions)
             {
                 string privateClass = func.isPrivate ? " private-function" : "";
-                content.put(format("<div id=\"%s\" class=\"bg-gray-800/40 rounded-lg p-5 border border-border-color hover:border-blue-500/50 transition-colors%s\">\n",
+                content.put(format("<div id=\"%s\" class=\"bg-gray-800/40 rounded-lg p-5 border border-border-color hover:border-red-500/50 transition-colors%s\">\n",
                         escapeHTML(func.name), privateClass));
                 content.put("<div class=\"font-mono text-sm\">\n");
                 content.put(format("<span class=\"text-red-400\">%s</span> ",
