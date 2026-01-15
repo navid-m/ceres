@@ -503,7 +503,6 @@ class Parser
                 escape = true;
                 continue;
             }
-
             if (inString)
             {
                 if (c == '"')
