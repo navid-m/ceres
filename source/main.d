@@ -185,6 +185,35 @@ class Parser
                             lastDocComment = pendingComments.dup;
                     }
                     pendingComments = [];
+
+                    long braceBalance = calculateBraceBalance(line);
+                    if (braceBalance > 0 || line.indexOf("{") == -1)
+                    {
+                        if (line.strip().endsWith(";"))
+                        {
+                            // No body
+                        }
+                        else
+                        {
+                            bool sawBrace = line.indexOf("{") != -1;
+                            while (currentLine < lines.length)
+                            {
+                                if (sawBrace && braceBalance == 0)
+                                    break;
+
+                                currentLine++;
+                                if (currentLine >= lines.length)
+                                    break;
+
+                                string ln = lines[currentLine].strip();
+                                long diff = calculateBraceBalance(ln);
+                                if (ln.indexOf("{") != -1)
+                                    sawBrace = true;
+
+                                braceBalance += diff;
+                            }
+                        }
+                    }
                 }
                 else if (!line.startsWith("{") && !line.startsWith("}"))
                     pendingComments = [];
@@ -280,14 +309,28 @@ class Parser
 
         if (trimmed.startsWith("if") || trimmed.startsWith("while")
                 || trimmed.startsWith("for") || trimmed.startsWith("switch") || trimmed.startsWith("foreach")
-                || trimmed.startsWith("return")
-                || trimmed.startsWith("assert") || trimmed.startsWith("else"))
+                || trimmed.startsWith("return") || trimmed.startsWith("assert") || trimmed.startsWith("else")
+                || trimmed.startsWith("import ") || trimmed.startsWith("module ") || trimmed.startsWith("struct ")
+                || trimmed.startsWith("class ") || trimmed.startsWith("interface ")
+                || trimmed.startsWith("enum ") || trimmed.startsWith("union "))
         {
             return false;
         }
 
-        if (trimmed.indexOf("=") != -1 && trimmed.indexOf("=") < trimmed.indexOf("("))
+        if (trimmed.indexOf("=") != -1
+                && trimmed.indexOf("=") < trimmed.indexOf("(") && !trimmed.startsWith("="))
             return false;
+
+        if (trimmed.count("=") > 0 && trimmed.indexOf("=") < trimmed.indexOf("(")
+                && !trimmed.startsWith("auto ") && !trimmed.startsWith("void ")
+                && !trimmed.startsWith("int ") && !trimmed.startsWith("string ")
+                && !trimmed.startsWith("bool ") && !trimmed.startsWith("float ")
+                && !trimmed.startsWith("double ") && !trimmed.startsWith("char ")
+                && !trimmed.startsWith("byte ") && !trimmed.startsWith("short ")
+                && !trimmed.startsWith("long ") && !trimmed.startsWith("real "))
+        {
+            return false;
+        }
 
         auto parenPos = trimmed.indexOf("(");
         if (parenPos > 0)
@@ -298,42 +341,73 @@ class Parser
                 return false;
 
             auto words = beforeParen.split();
-            if (words.length < 2)
+            if (words.length == 0)
             {
                 return false;
             }
 
-            string firstWord = words[0];
-            bool hasModifierOrType = false;
-
-            if (firstWord == "public" || firstWord == "private"
-                    || firstWord == "protected" || firstWord == "static" || firstWord == "final"
-                    || firstWord == "override" || firstWord == "abstract"
-                    || firstWord == "const" || firstWord == "immutable" || firstWord == "shared"
-                    || firstWord == "pure" || firstWord == "nothrow" || firstWord == "@safe"
-                    || firstWord == "@trusted" || firstWord == "@system"
-                    || firstWord == "void" || firstWord == "int" || firstWord == "bool"
-                    || firstWord == "string" || firstWord == "char"
-                    || firstWord == "byte" || firstWord == "short" || firstWord == "long" || firstWord == "float"
-                    || firstWord == "double" || firstWord == "real" || firstWord == "auto")
+            if (words.length >= 2)
             {
-                hasModifierOrType = true;
-            }
+                string returnType = words[0];
+                string funcName = words[1];
 
-            if (words.length >= 2 && words[0] != "auto")
-            {
-                string secondWord = words[1];
-                if (secondWord.indexOf("(") == -1 && (secondWord[0] >= 'a'
-                        && secondWord[0] <= 'z' || secondWord[0] >= 'A' && secondWord[0] <= 'Z'))
+                string checkType = returnType;
+                while (checkType.endsWith("[]"))
+                    checkType = checkType[0 .. $ - 2];
+
+                bool isFirstWordType = (checkType == "public" || checkType == "private"
+                        || checkType == "protected" || checkType == "static"
+                        || checkType == "final" || checkType == "override"
+                        || checkType == "abstract" || checkType == "const"
+                        || checkType == "immutable"
+                        || checkType == "shared" || checkType == "pure" || checkType == "nothrow"
+                        || checkType == "@safe" || checkType == "@trusted"
+                        || checkType == "@system" || checkType == "void"
+                        || checkType == "int" || checkType == "bool" || checkType == "string"
+                        || checkType == "char" || checkType == "byte" || checkType == "short"
+                        || checkType == "long" || checkType == "float"
+                        || checkType == "double" || checkType == "real"
+                        || checkType == "auto" || checkType.startsWith("@")); // Custom attributes
+
+                if (isFirstWordType && isValidIdentifier(funcName))
                 {
-                    hasModifierOrType = true;
+                    return true;
+                }
+
+                if (!isFirstWordType && isValidIdentifier(checkType))
+                {
+                    return true;
                 }
             }
-
-            return hasModifierOrType;
+            else if (words.length == 1 && isValidIdentifier(words[0]))
+            {
+                return true;
+            }
         }
 
         return false;
+    }
+
+    private bool isValidIdentifier(string ident)
+    {
+        if (ident.length == 0)
+            return false;
+
+        import std.algorithm;
+        import std.range;
+
+        if (!(ident[0] == '_' || (ident[0] >= 'a' && ident[0] <= 'z')
+                || (ident[0] >= 'A' && ident[0] <= 'Z')))
+            return false;
+
+        foreach (ch; ident[1 .. $])
+        {
+            if (!(ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A'
+                    && ch <= 'Z') || (ch >= '0' && ch <= '9')))
+                return false;
+        }
+
+        return true;
     }
 
     private FunctionDoc parseFunction(string line, string[] comments)
@@ -394,6 +468,58 @@ class Parser
         return doc;
     }
 
+    private long calculateBraceBalance(string line)
+    {
+        long balance = 0;
+        bool inString = false;
+        bool inChar = false;
+        bool escape = false;
+
+        for (size_t i = 0; i < line.length; i++)
+        {
+            char c = line[i];
+
+            if (escape)
+            {
+                escape = false;
+                continue;
+            }
+
+            if (c == '\\')
+            {
+                escape = true;
+                continue;
+            }
+
+            if (inString)
+            {
+                if (c == '"')
+                    inString = false;
+            }
+            else if (inChar)
+            {
+                if (c == '\'')
+                    inChar = false;
+            }
+            else
+            {
+                if (c == '"')
+                    inString = true;
+                else if (c == '\'')
+                    inChar = true;
+                else if (c == '/' && i + 1 < line.length && line[i + 1] == '/')
+                {
+                    break;
+                }
+                else if (c == '{')
+                    balance++;
+                else if (c == '}')
+                    balance--;
+            }
+        }
+        return balance;
+    }
+
     private ClassDoc parseClass(string line, string[] comments)
     {
         ClassDoc doc;
@@ -416,9 +542,7 @@ class Parser
             }
         }
 
-        long braceBalance = 0;
-        braceBalance += line.count("{");
-        braceBalance -= line.count("}");
+        long braceBalance = calculateBraceBalance(line);
         bool sawBrace = line.indexOf("{") != -1;
 
         string[] lastMemberDocComment;
@@ -435,16 +559,15 @@ class Parser
             {
                 string ln = lines[currentLine].strip();
 
-                long open = ln.count("{");
-                long close = ln.count("}");
+                long diff = calculateBraceBalance(ln);
 
-                if (open > 0)
+                if (diff > 0 || ln.indexOf("{") != -1)
                     sawBrace = true;
 
                 long oldBalance = braceBalance;
-                braceBalance += (open - close);
+                braceBalance += diff;
 
-                if (sawBrace && braceBalance == 0 && close > 0)
+                if (sawBrace && braceBalance == 0 && (diff < 0 || ln.indexOf("}") != -1))
                 {
                     break;
                 }
