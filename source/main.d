@@ -866,11 +866,11 @@ class HTMLGenerator
 
         string output = templateContent.replace("{{modules_list}}", listContent.data);
         output = output.replace("{{project_name}}", escapeHTML(projectName));
-        
+
         string licenseInfo = "";
         if (licenseType.length > 0)
         {
-            licenseInfo = " - License: " ~ escapeHTML(licenseType);
+            licenseInfo = "License: " ~ escapeHTML(licenseType);
         }
         output = output.replace("{{license_info}}", licenseInfo);
 
@@ -1137,15 +1137,24 @@ ProjectInfo detectProject(string path)
         try
         {
             string content = readText(licensePath);
-            if (content.canFind("MIT License")) info.licenseType = "MIT";
-            else if (content.canFind("Apache License 2.0") || content.canFind("Apache-2.0")) info.licenseType = "Apache 2.0";
-            else if (content.canFind("GNU General Public License") || content.canFind("GPL")) info.licenseType = "GPL";
-            else if (content.canFind("BSD 3-Clause")) info.licenseType = "BSD 3-Clause";
-            else if (content.canFind("BSD 2-Clause")) info.licenseType = "BSD 2-Clause";
-            else if (content.canFind("ISC License")) info.licenseType = "ISC";
-            else if (content.canFind("Mozilla Public License 2.0")) info.licenseType = "MPL 2.0";
-            else if (content.canFind("The Unlicense")) info.licenseType = "Unlicense";
-            else info.licenseType = "Custom";
+            if (content.canFind("MIT License"))
+                info.licenseType = "MIT";
+            else if (content.canFind("Apache License 2.0") || content.canFind("Apache-2.0"))
+                info.licenseType = "Apache 2.0";
+            else if (content.canFind("GNU General Public License") || content.canFind("GPL"))
+                info.licenseType = "GPL";
+            else if (content.canFind("BSD 3-Clause"))
+                info.licenseType = "BSD 3-Clause";
+            else if (content.canFind("BSD 2-Clause"))
+                info.licenseType = "BSD 2-Clause";
+            else if (content.canFind("ISC License"))
+                info.licenseType = "ISC";
+            else if (content.canFind("Mozilla Public License 2.0"))
+                info.licenseType = "MPL 2.0";
+            else if (content.canFind("The Unlicense"))
+                info.licenseType = "Unlicense";
+            else
+                info.licenseType = "Custom";
         }
         catch (Exception e)
         {
@@ -1157,15 +1166,24 @@ ProjectInfo detectProject(string path)
         try
         {
             string content = readText(licenseMdPath);
-            if (content.canFind("MIT License")) info.licenseType = "MIT";
-            else if (content.canFind("Apache License 2.0") || content.canFind("Apache-2.0")) info.licenseType = "Apache 2.0";
-            else if (content.canFind("GNU General Public License") || content.canFind("GPL")) info.licenseType = "GPL";
-            else if (content.canFind("BSD 3-Clause")) info.licenseType = "BSD 3-Clause";
-            else if (content.canFind("BSD 2-Clause")) info.licenseType = "BSD 2-Clause";
-            else if (content.canFind("ISC License")) info.licenseType = "ISC";
-            else if (content.canFind("Mozilla Public License 2.0")) info.licenseType = "MPL 2.0";
-            else if (content.canFind("The Unlicense")) info.licenseType = "Unlicense";
-            else info.licenseType = "Custom";
+            if (content.canFind("MIT License"))
+                info.licenseType = "MIT";
+            else if (content.canFind("Apache License 2.0") || content.canFind("Apache-2.0"))
+                info.licenseType = "Apache 2.0";
+            else if (content.canFind("GNU General Public License") || content.canFind("GPL"))
+                info.licenseType = "GPL";
+            else if (content.canFind("BSD 3-Clause"))
+                info.licenseType = "BSD 3-Clause";
+            else if (content.canFind("BSD 2-Clause"))
+                info.licenseType = "BSD 2-Clause";
+            else if (content.canFind("ISC License"))
+                info.licenseType = "ISC";
+            else if (content.canFind("Mozilla Public License 2.0"))
+                info.licenseType = "MPL 2.0";
+            else if (content.canFind("The Unlicense"))
+                info.licenseType = "Unlicense";
+            else
+                info.licenseType = "Custom";
         }
         catch (Exception e)
         {
@@ -1356,7 +1374,8 @@ void main(string[] args)
     string outputDir = "docs";
     writeln("Generating documentation in ./", outputDir);
 
-    auto generator = new HTMLGenerator(modules, outputDir, toTitleCase(projectInfo.projectName), projectInfo.licenseType);
+    auto generator = new HTMLGenerator(modules, outputDir,
+            toTitleCase(projectInfo.projectName), projectInfo.licenseType);
     generator.generate();
 
     writeln("Documentation generated successfully.");
