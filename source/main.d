@@ -417,7 +417,8 @@ class HTMLGenerator
             string word = m.hit;
             if (word in typeLinks)
             {
-                app.put(format("<a href=\"%s\">%s</a>", typeLinks[word], escapeHTML(word)));
+                app.put(format("<a href=\"%s\" class=\"text-blue-400 hover:text-blue-300 transition-colors\">%s</a>",
+                        typeLinks[word], escapeHTML(word)));
             }
             else
             {
@@ -442,8 +443,6 @@ class HTMLGenerator
         {
             generateModulePage(mod);
         }
-
-        generateCSS();
     }
 
     private void generateIndex()
@@ -455,8 +454,16 @@ class HTMLGenerator
 
         foreach (mod; modules)
         {
-            listContent.put(format("                    <li><a href=\"%s.html\">%s</a></li>\n",
-                    sanitizeFilename(mod.name), escapeHTML(mod.name)));
+            listContent.put(format("<li><a href=\"%s.html\" class=\"block p-4 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg border border-border-color hover:border-blue-500 transition-all duration-200 group\">\n",
+                    sanitizeFilename(mod.name)));
+            listContent.put(format("<div class=\"flex items-center justify-between\">\n"));
+            listContent.put(format("<span class=\"text-blue-400 group-hover:text-blue-300 font-medium\">%s</span>\n",
+                    escapeHTML(mod.name)));
+            listContent.put(format("<svg class=\"w-5 h-5 text-gray-600 group-hover:text-blue-400 transform group-hover:translate-x-1 transition-transform\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n"));
+            listContent.put(format("<path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path>\n"));
+            listContent.put(format("</svg>\n"));
+            listContent.put(format("</div>\n"));
+            listContent.put(format("</a></li>\n"));
         }
 
         string output = templateContent.replace("{{modules_list}}", listContent.data);
@@ -474,60 +481,89 @@ class HTMLGenerator
 
         if (mod.comments.length > 0)
         {
-            content.put("<section class=\"module-description\">\n");
+            content.put(
+                    "<section class=\"bg-card-bg rounded-xl p-6 shadow-lg border border-border-color\">\n");
+            content.put("<div class=\"prose prose-invert max-w-none\">\n");
             foreach (comment; mod.comments)
             {
-                content.put(format("<p>%s</p>\n", escapeHTML(comment)));
+                content.put(format("<p class=\"text-gray-300 leading-relaxed\">%s</p>\n",
+                        escapeHTML(comment)));
             }
+            content.put("</div>\n");
             content.put("</section>\n");
         }
 
         if (mod.classes.length > 0)
         {
-            content.put("<section class=\"classes\">\n");
-            content.put("<h2>Classes and Structures</h2>\n");
+            content.put(
+                    "<section class=\"bg-card-bg rounded-xl shadow-lg border border-border-color overflow-hidden\">\n");
+            content.put(
+                    "<div class=\"p-6 border-b border-border-color bg-gradient-to-r from-blue-900/20 to-transparent\">\n");
+            content.put(
+                    "<h2 class=\"text-2xl font-semibold text-white flex items-center gap-2\">\n");
+            content.put(
+                    "<svg class=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n");
+            content.put("<path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10\"></path>\n");
+            content.put("</svg>\n");
+            content.put("Classes and Structures\n");
+            content.put("</h2>\n");
+            content.put("</div>\n");
+            content.put("<div class=\"p-6 space-y-6\">\n");
 
             foreach (cls; mod.classes)
             {
-                content.put("<div class=\"class-doc\">\n");
-                content.put(format("<h3 id=\"%s\">%s %s</h3>\n",
-                        escapeHTML(cls.name), escapeHTML(cls.type), escapeHTML(cls.name)));
+                content.put("<div class=\"bg-gray-800/40 rounded-lg p-6 border border-border-color hover:border-red-500/50 transition-colors\">\n");
+                content.put(format(
+                        "<h3 id=\"%s\" class=\"text-xl font-semibold text-cyan-400 mb-3 flex items-center gap-2\">\n",
+                        escapeHTML(cls.name)));
+                content.put("<span class=\"text-gray-500 text-sm font-normal uppercase tracking-wide\">" ~ escapeHTML(
+                        cls.type) ~ "</span>\n");
+                content.put(escapeHTML(cls.name) ~ "\n");
+                content.put("</h3>\n");
 
                 if (cls.comments.length > 0)
                 {
-                    content.put("<div class=\"description\">\n");
+                    content.put("<div class=\"mb-4 pl-4 border-l-2 border-red-500/50\">\n");
                     foreach (comment; cls.comments)
                     {
-                        content.put(format("<p>%s</p>\n", escapeHTML(comment)));
+                        content.put(format("<p class=\"text-gray-300 leading-relaxed\">%s</p>\n",
+                                escapeHTML(comment)));
                     }
                     content.put("</div>\n");
                 }
 
                 if (cls.fields.length > 0)
                 {
-                    content.put("<div class=\"fields\">\n");
-                    content.put("<h4>Fields</h4>\n");
+                    content.put("<div class=\"mt-4\">\n");
+                    content.put(
+                            "<h4 class=\"text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2\">Fields</h4>\n");
+                    content.put("<div class=\"space-y-2\">\n");
                     foreach (field; cls.fields)
                     {
-                        content.put(format("<div class=\"field-code\"><code>%s</code></div>\n",
-                                linkify(field)));
+                        content.put("<div class=\"bg-code-bg rounded p-3 border border-border-color font-mono text-sm text-gray-300\">\n");
+                        content.put(linkify(field) ~ "\n");
+                        content.put("</div>\n");
                     }
+                    content.put("</div>\n");
                     content.put("</div>\n");
                 }
 
                 if (cls.methods.length > 0)
                 {
-                    content.put("<div class=\"methods\">\n");
-                    content.put("<h4>Methods</h4>\n");
+                    content.put("<div class=\"mt-4\">\n");
+                    content.put(
+                            "<h4 class=\"text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3\">Methods</h4>\n");
+                    content.put("<div class=\"space-y-3\">\n");
                     foreach (func; cls.methods)
                     {
-                        content.put("<div class=\"method-doc\">\n");
-                        content.put("<div class=\"signature\">\n");
-                        content.put(format("<span class=\"return-type\">%s</span> \n",
+                        content.put(
+                                "<div class=\"bg-code-bg rounded-lg p-4 border border-border-color\">\n");
+                        content.put("<div class=\"font-mono text-sm mb-2\">\n");
+                        content.put(format("<span class=\"text-pink-400\">%s</span> ",
                                 escapeHTML(func.returnType)));
-                        content.put(format("<span class=\"function-name\">%s</span>",
+                        content.put(format("<span class=\"text-blue-400 font-semibold\">%s</span>",
                                 escapeHTML(func.name)));
-                        content.put("<span class=\"parameters\">(");
+                        content.put("<span class=\"text-gray-500\">(");
 
                         foreach (i, param; func.parameters)
                         {
@@ -541,38 +577,53 @@ class HTMLGenerator
 
                         if (func.comments.length > 0)
                         {
-                            content.put("<div class=\"description\">\n");
+                            content.put("<div class=\"mt-2 pl-3 border-l border-blue-500/50\">\n");
                             foreach (comment; func.comments)
                             {
-                                content.put(format("<p>%s</p>\n", escapeHTML(comment)));
+                                content.put(format("<p class=\"text-gray-400 text-sm\">%s</p>\n",
+                                        escapeHTML(comment)));
                             }
                             content.put("</div>\n");
                         }
                         content.put("</div>\n");
                     }
                     content.put("</div>\n");
+                    content.put("</div>\n");
                 }
 
                 content.put("</div>\n");
             }
 
+            content.put("</div>\n");
             content.put("</section>\n");
         }
 
         if (mod.functions.length > 0)
         {
-            content.put("<section class=\"functions\">\n");
-            content.put("<h2>Functions</h2>\n");
+            content.put(
+                    "<section class=\"bg-card-bg rounded-xl shadow-lg border border-border-color overflow-hidden\">\n");
+            content.put(
+                    "<div class=\"p-6 border-b border-border-color bg-gradient-to-r from-blue-900/20 to-transparent\">\n");
+            content.put(
+                    "<h2 class=\"text-2xl font-semibold text-white flex items-center gap-2\">\n");
+            content.put(
+                    "<svg class=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n");
+            content.put("<path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z\"></path>\n");
+            content.put("</svg>\n");
+            content.put("Functions\n");
+            content.put("</h2>\n");
+            content.put("</div>\n");
+            content.put("<div class=\"p-6 space-y-4\">\n");
 
             foreach (func; mod.functions)
             {
-                content.put("<div class=\"function-doc\">\n");
-                content.put("<div class=\"signature\">\n");
-                content.put(format("<span class=\"return-type\">%s</span> \n",
+                content.put("<div class=\"bg-gray-800/40 rounded-lg p-5 border border-border-color hover:border-blue-500/50 transition-colors\">\n");
+                content.put("<div class=\"font-mono text-sm mb-3\">\n");
+                content.put(format("<span class=\"text-pink-400\">%s</span> ",
                         escapeHTML(func.returnType)));
-                content.put(format("<span class=\"function-name\">%s</span>",
+                content.put(format("<span class=\"text-blue-400 font-semibold text-base\">%s</span>",
                         escapeHTML(func.name)));
-                content.put("<span class=\"parameters\">(");
+                content.put("<span class=\"text-gray-500\">(");
 
                 foreach (i, param; func.parameters)
                 {
@@ -586,10 +637,11 @@ class HTMLGenerator
 
                 if (func.comments.length > 0)
                 {
-                    content.put("<div class=\"description\">\n");
+                    content.put("<div class=\"pl-4 border-l-2 border-blue-500/50\">\n");
                     foreach (comment; func.comments)
                     {
-                        content.put(format("<p>%s</p>\n", escapeHTML(comment)));
+                        content.put(format("<p class=\"text-gray-300 leading-relaxed\">%s</p>\n",
+                                escapeHTML(comment)));
                     }
                     content.put("</div>\n");
                 }
@@ -597,6 +649,7 @@ class HTMLGenerator
                 content.put("</div>\n");
             }
 
+            content.put("</div>\n");
             content.put("</section>\n");
         }
 
@@ -604,14 +657,6 @@ class HTMLGenerator
         output = output.replace("{{content}}", content.data);
 
         f.write(output);
-        f.close();
-    }
-
-    private void generateCSS()
-    {
-        auto f = File(buildPath(outputDir, "style.css"), "w");
-        string cssContent = import("style.css");
-        f.write(cssContent);
         f.close();
     }
 

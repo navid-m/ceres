@@ -3,18 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{module_name}} - Docs</title>
-    <link rel="stylesheet" href="style.css">
+    <title>{{module_name}} - Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'code-bg': '#0d1117',
+                        'card-bg': '#161b22',
+                        'border-color': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Module: {{module_name}}</h1>
-            <nav><a href="index.html">Back to Index</a></nav>
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <header class="mb-8">
+            <div class="bg-card-bg rounded-2xl p-8 shadow-2xl border border-border-color">
+                <div class="flex items-center justify-between mb-4">
+                    <a href="index.html" class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors group">
+                        <svg class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Back to Index
+                    </a>
+                </div>
+                <h1 class="text-4xl font-bold text-white mb-2">{{module_name}}</h1>
+                <p class="text-gray-400 text-lg">Module Documentation</p>
+            </div>
         </header>
-        <main>
+
+        <main class="space-y-8">
 {{content}}
         </main>
+
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            <p>Generated with D Documentation Generator</p>
+        </footer>
     </div>
 </body>
 </html>
