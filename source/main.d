@@ -374,11 +374,57 @@ class HTMLGenerator
 {
     private ModuleDoc[] modules;
     private string outputDir;
+    private string[string] typeLinks;
 
     this(ModuleDoc[] modules, string outputDir)
     {
         this.modules = modules;
         this.outputDir = outputDir;
+        buildTypeLinks();
+    }
+
+    private void buildTypeLinks()
+    {
+        typeLinks["string"] = "https://dlang.org/library/object/string.html";
+        typeLinks["int"] = "https://dlang.org/spec/type.html";
+        typeLinks["bool"] = "https://dlang.org/spec/type.html";
+        typeLinks["void"] = "https://dlang.org/spec/type.html";
+        typeLinks["float"] = "https://dlang.org/spec/type.html";
+        typeLinks["double"] = "https://dlang.org/spec/type.html";
+        typeLinks["size_t"] = "https://dlang.org/library/object/size_t.html";
+        typeLinks["Object"] = "https://dlang.org/library/object/object.html";
+
+        foreach (mod; modules)
+        {
+            foreach (cls; mod.classes)
+            {
+                typeLinks[cls.name] = format("%s.html#%s", sanitizeFilename(mod.name), cls.name);
+            }
+        }
+    }
+
+    private string linkify(string code)
+    {
+        auto re = regex(`\b\w+\b`);
+        auto app = appender!string;
+        size_t lastPos = 0;
+
+        foreach (m; code.matchAll(re))
+        {
+            app.put(escapeHTML(code[lastPos .. m.pre.length]));
+            string word = m.hit;
+            if (word in typeLinks)
+            {
+                app.put(format("<a href=\"%s\">%s</a>", typeLinks[word], escapeHTML(word)));
+            }
+            else
+            {
+                app.put(escapeHTML(word));
+            }
+            lastPos = m.pre.length + word.length;
+        }
+        app.put(escapeHTML(code[lastPos .. $]));
+        return app.data;
     }
 
     void generate()
@@ -442,7 +488,7 @@ class HTMLGenerator
             foreach (cls; mod.classes)
             {
                 content.put("<div class=\"class-doc\">\n");
-                content.put(format("<h3>%s %s</h3>\n", escapeHTML(cls.type), escapeHTML(cls.name)));
+                content.put(format("<h3 id=\"%s\">%s %s</h3>\n", escapeHTML(cls.name), escapeHTML(cls.type), escapeHTML(cls.name)));
 
                 if (cls.comments.length > 0)
                 {
@@ -458,12 +504,10 @@ class HTMLGenerator
                 {
                     content.put("<div class=\"fields\">\n");
                     content.put("<h4>Fields</h4>\n");
-                    content.put("<ul>\n");
                     foreach (field; cls.fields)
                     {
-                        content.put(format("<li><code>%s</code></li>\n", escapeHTML(field)));
+                        content.put(format("<div class=\"field-code\"><code>%s</code></div>\n", linkify(field)));
                     }
-                    content.put("</ul>\n");
                     content.put("</div>\n");
                 }
 

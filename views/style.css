@@ -137,3 +137,23 @@ h3 {
     margin-bottom: 20px;
     border: 1px solid #333;
 }
+
+.field-code {
+    font-family: 'Courier New', monospace;
+    background: #121212;
+    color: #d4d4d4;
+    padding: 8px 10px;
+    border-radius: 3px;
+    margin-bottom: 5px;
+    border: 1px solid #333;
+    font-size: 0.9em;
+}
+
+.field-code a, .signature a {
+    color: #58a6ff;
+    text-decoration: none;
+}
+
+.field-code a:hover, .signature a:hover {
+    text-decoration: underline;
+}
