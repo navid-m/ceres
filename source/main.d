@@ -1030,6 +1030,14 @@ ProjectInfo detectProject(string path)
     return info;
 }
 
+/** 
+ * Find D files.
+ *
+ * Params:
+ *   rootPath = The root path to search
+ * 
+ * Returns: The string array of D file paths 
+ */
 string[] findDFiles(string rootPath)
 {
     string[] files;
