@@ -349,7 +349,7 @@ class Parser
             || trimmed.startsWith("private const ") || trimmed.startsWith(
                     "private immutable ") || trimmed.startsWith("private shared ")
             || trimmed.startsWith("private pure ") || trimmed.startsWith("private nothrow ")
-            || (trimmed.startsWith("private") && !trimmed.startsWith("private(")); // Handle cases like "private void func(..."
+            || (trimmed.startsWith("private") && !trimmed.startsWith("private("));
 
         auto parenPos = line.indexOf("(");
         auto closeParenPos = line.indexOf(")");
