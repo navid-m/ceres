@@ -178,27 +178,65 @@ class Parser
             return false;
         }
 
-        if (line.startsWith("if") || line.startsWith("while")
-                || line.startsWith("for") || line.startsWith("switch") || line.startsWith(
-                    "foreach"))
+        string trimmed = line.strip();
+
+        if (trimmed.startsWith("if") || trimmed.startsWith("while")
+                || trimmed.startsWith("for") || trimmed.startsWith("switch") || trimmed.startsWith("foreach")
+                || trimmed.startsWith("return")
+                || trimmed.startsWith("assert") || trimmed.startsWith("else"))
         {
             return false;
         }
 
-        auto parenPos = line.indexOf("(");
+        if (trimmed.indexOf("=") != -1 && trimmed.indexOf("=") < trimmed.indexOf("("))
+        {
+            return false;
+        }
+
+        auto parenPos = trimmed.indexOf("(");
         if (parenPos > 0)
         {
-            auto beforeParen = line[0 .. parenPos].strip().split();
-            if (beforeParen.length >= 1)
+            auto beforeParen = trimmed[0 .. parenPos].strip();
+
+            if (beforeParen.indexOf(".") != -1)
             {
-                auto lastWord = beforeParen[$ - 1];
-                if (lastWord.length > 0 && (lastWord[0] >= 'a'
-                        && lastWord[0] <= 'z' || lastWord[0] >= 'A'
-                        && lastWord[0] <= 'Z' || lastWord[0] == '_'))
+                return false;
+            }
+
+            auto words = beforeParen.split();
+            if (words.length < 2)
+            {
+                return false;
+            }
+
+            string firstWord = words[0];
+            bool hasModifierOrType = false;
+
+            if (firstWord == "public" || firstWord == "private"
+                    || firstWord == "protected" || firstWord == "static" || firstWord == "final"
+                    || firstWord == "override" || firstWord == "abstract"
+                    || firstWord == "const" || firstWord == "immutable" || firstWord == "shared"
+                    || firstWord == "pure" || firstWord == "nothrow" || firstWord == "@safe"
+                    || firstWord == "@trusted" || firstWord == "@system"
+                    || firstWord == "void" || firstWord == "int" || firstWord == "bool"
+                    || firstWord == "string" || firstWord == "char"
+                    || firstWord == "byte" || firstWord == "short" || firstWord == "long" || firstWord == "float"
+                    || firstWord == "double" || firstWord == "real" || firstWord == "auto")
+            {
+                hasModifierOrType = true;
+            }
+
+            if (words.length >= 2 && words[0] != "auto")
+            {
+                string secondWord = words[1];
+                if (secondWord.indexOf("(") == -1 && (secondWord[0] >= 'a'
+                        && secondWord[0] <= 'z' || secondWord[0] >= 'A' && secondWord[0] <= 'Z'))
                 {
-                    return true;
+                    hasModifierOrType = true;
                 }
             }
+
+            return hasModifierOrType;
         }
 
         return false;
@@ -786,6 +824,6 @@ void main(string[] args)
     auto generator = new HTMLGenerator(modules, outputDir);
     generator.generate();
 
-    writeln("Documentation generated successfully");
+    writeln("Documentation generated successfully.");
     writeln("Open ", buildPath(outputDir, "index.html"), " to view");
 }
