@@ -376,12 +376,14 @@ class HTMLGenerator
 {
     private ModuleDoc[] modules;
     private string outputDir;
+    private string projectName;
     private string[string] typeLinks;
 
-    this(ModuleDoc[] modules, string outputDir)
+    this(ModuleDoc[] modules, string outputDir, string projectName)
     {
         this.modules = modules;
         this.outputDir = outputDir;
+        this.projectName = projectName.length > 0 ? projectName : "Project";
         buildTypeLinks();
     }
 
@@ -524,6 +526,7 @@ class HTMLGenerator
         }
 
         string output = templateContent.replace("{{modules_list}}", listContent.data);
+        output = output.replace("{{project_name}}", escapeHTML(projectName));
         f.write(output);
         f.close();
     }
@@ -606,7 +609,7 @@ class HTMLGenerator
                         content.put(format(
                                 "<div id=\"%s\" class=\"bg-code-bg rounded-lg p-4 border border-border-color\">\n",
                                 escapeHTML(methodId)));
-                        content.put("<div class=\"font-mono text-sm mb-2\">\n");
+                        content.put("<div class=\"font-mono text-sm\">\n");
                         content.put(format("<span class=\"text-red-400\">%s</span> ",
                                 escapeHTML(func.returnType)));
                         content.put(format("<span class=\"text-blue-400 font-semibold\">%s</span>",
@@ -665,7 +668,8 @@ class HTMLGenerator
 
             foreach (func; mod.functions)
             {
-                content.put(format("<div id=\"%s\" class=\"bg-gray-800/40 rounded-lg p-5 border border-border-color hover:border-blue-500/50 transition-colors\">\n", escapeHTML(func.name)));
+                content.put(format("<div id=\"%s\" class=\"bg-gray-800/40 rounded-lg p-5 border border-border-color hover:border-blue-500/50 transition-colors\">\n",
+                        escapeHTML(func.name)));
                 content.put("<div class=\"font-mono text-sm mb-3\">\n");
                 content.put(format("<span class=\"text-red-400\">%s</span> ",
                         escapeHTML(func.returnType)));
@@ -911,7 +915,7 @@ void main(string[] args)
     string outputDir = "docs";
     writeln("Generating documentation in ./", outputDir);
 
-    auto generator = new HTMLGenerator(modules, outputDir);
+    auto generator = new HTMLGenerator(modules, outputDir, projectInfo.projectName);
     generator.generate();
 
     writeln("Documentation generated successfully.");
