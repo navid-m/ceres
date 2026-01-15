@@ -257,6 +257,14 @@ class Parser
         return doc;
     }
 
+    /** 
+     * Extract some comment from a line.
+     *
+     * Params:
+     *   line = The line in question
+     * 
+     * Returns: The corresponding comment 
+     */
     private string extractComment(string line)
     {
         if (line.startsWith("///"))
