@@ -6,6 +6,13 @@
     <title>Docs - {{module_name}}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="search_index.js"></script>
+    <style>
+        .highlight-result {
+            border: 2px solid #ef4444 !important;
+            background-color: rgba(239, 68, 68, 0.1) !important;
+            transition: all 0.5s ease-in-out;
+        }
+    </style>
     <script>
         tailwind.config = {
             theme: {
@@ -113,6 +120,25 @@
 
         togglePrivateElements('hide-private-functions-checkbox', '.private-function, .private-method');
         togglePrivateElements('hide-private-fields-checkbox', '.private-field');
+
+        function highlightSearchResult() {
+            const hash = window.location.hash;
+            document.querySelectorAll('.highlight-result').forEach(el => el.classList.remove('highlight-result'));
+            
+            if (hash) {
+                const id = hash.substring(1);
+                const element = document.getElementById(id);
+                if (element) {
+                    element.classList.add('highlight-result');
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        window.addEventListener('hashchange', highlightSearchResult);
+        if (window.location.hash) {
+            setTimeout(highlightSearchResult, 100);
+        }
     </script>
 </body>
 </html>
