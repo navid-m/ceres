@@ -145,7 +145,7 @@ class Parser
                                 {
                                     pendingComments ~= extractComment(commentLine);
                                 }
-                                else if (commentLine.length > 2 && commentLine != "+/") // Handle content before closing +/
+                                else if (commentLine.length > 2 && commentLine != "+/")
                                 {
                                     pendingComments ~= extractComment(commentLine);
                                 }
