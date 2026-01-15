@@ -1311,10 +1311,10 @@ class HTMLGenerator
             if (trimmed == "Params:")
             {
                 if (insideParams)
-                    app.put("</ul>\n");
+                    app.put("</tbody></table>\n");
                 insideParams = true;
                 app.put("<div class=\"font-bold text-gray-200 mt-4 mb-2\">Params:</div>\n");
-                app.put("<ul class=\"list-none pl-4 space-y-2 mb-4\">\n");
+                app.put("<table class=\"w-full text-left border-collapse mb-4\">\n<tbody>\n");
                 continue;
             }
 
@@ -1322,7 +1322,7 @@ class HTMLGenerator
             {
                 if (insideParams)
                 {
-                    app.put("</ul>\n");
+                    app.put("</tbody></table>\n");
                     insideParams = false;
                 }
 
@@ -1342,12 +1342,12 @@ class HTMLGenerator
                 {
                     string pName = trimmed[0 .. eqPos].strip();
                     string pDesc = trimmed[eqPos + 1 .. $].strip();
-                    app.put(format("<li><span class=\"font-mono text-blue-300 font-semibold\">%s</span> <span class=\"text-gray-400\">%s</span></li>\n",
+                    app.put(format("<tr class=\"border-b border-gray-800 last:border-0\">\n<td class=\"py-2 pr-4 font-mono text-blue-300 font-semibold whitespace-nowrap align-top\">%s</td>\n<td class=\"py-2 text-gray-400 align-top\">%s</td>\n</tr>\n",
                             escapeHTML(pName), processMacros(pDesc, currentModule)));
                 }
                 else
                 {
-                    app.put(format("<div class=\"text-gray-400 ml-4\">%s</div>\n",
+                    app.put(format("<tr class=\"border-b border-gray-800 last:border-0\">\n<td></td>\n<td class=\"py-2 text-gray-400 align-top\">%s</td>\n</tr>\n",
                             processMacros(trimmed, currentModule)));
                 }
             }
@@ -1360,7 +1360,7 @@ class HTMLGenerator
         }
 
         if (insideParams)
-            app.put("</ul>\n");
+            app.put("</tbody></table>\n");
 
         return app.data;
     }
