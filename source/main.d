@@ -387,7 +387,7 @@ class HTMLGenerator
 
     private void buildTypeLinks()
     {
-        typeLinks["string"] = "https://dlang.org/library/object/string.html";
+        typeLinks["string"] = "https://dlang.org/phobos/std_string.html";
         typeLinks["int"] = "https://dlang.org/spec/type.html";
         typeLinks["bool"] = "https://dlang.org/spec/type.html";
         typeLinks["void"] = "https://dlang.org/spec/type.html";
