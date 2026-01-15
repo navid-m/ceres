@@ -47,6 +47,28 @@ struct ClassDoc
 }
 
 /**
+ * A enum member documentation.
+ */
+struct EnumMemberDoc
+{
+    string name;
+    string value;
+    string[] comments;
+    size_t lineNumber;
+}
+
+/**
+ * Some documentation about an enum.
+ */
+struct EnumDoc
+{
+    string name;
+    string[] comments;
+    EnumMemberDoc[] members;
+    size_t lineNumber;
+}
+
+/**
  * Some documentation about a module.
  */
 struct ModuleDoc
@@ -56,6 +78,7 @@ struct ModuleDoc
     string[] comments;
     FunctionDoc[] functions;
     ClassDoc[] classes;
+    EnumDoc[] enums;
     string[] imports;
 }
 
@@ -164,12 +187,23 @@ class Parser
             else if (line.length > 0 && !line.startsWith("//"))
             {
                 if (line.startsWith("class ") || line.startsWith("struct ")
-                        || line.startsWith("interface ") || line.startsWith("enum "))
+                        || line.startsWith("interface "))
                 {
                     auto classDoc = parseClass(line, pendingComments);
                     if (classDoc.name.length > 0)
                     {
                         doc.classes ~= classDoc;
+                        if (pendingComments.length > 0)
+                            lastDocComment = pendingComments.dup;
+                    }
+                    pendingComments = [];
+                }
+                else if (line.startsWith("enum "))
+                {
+                    auto enumDoc = parseEnum(line, pendingComments);
+                    if (enumDoc.name.length > 0)
+                    {
+                        doc.enums ~= enumDoc;
                         if (pendingComments.length > 0)
                             lastDocComment = pendingComments.dup;
                     }
@@ -532,6 +566,146 @@ class Parser
         return balance;
     }
 
+    private EnumDoc parseEnum(string line, string[] comments)
+    {
+        EnumDoc doc;
+        doc.comments = comments;
+        doc.lineNumber = currentLine + 1;
+
+        auto parts = line.split();
+        if (parts.length >= 2)
+        {
+            doc.name = parts[1];
+            if (doc.name.indexOf("{") != -1)
+            {
+                doc.name = doc.name[0 .. doc.name.indexOf("{")].strip();
+            }
+            if (doc.name.indexOf(":") != -1)
+            {
+                doc.name = doc.name[0 .. doc.name.indexOf(":")].strip();
+            }
+        }
+
+        long braceBalance = calculateBraceBalance(line);
+        bool sawBrace = line.indexOf("{") != -1;
+
+        string[] lastMemberDocComment;
+
+        if (!sawBrace && line.strip().endsWith(";"))
+            return doc;
+
+        if (braceBalance > 0 || !sawBrace)
+        {
+            string[] memberComments;
+            currentLine++;
+
+            while (currentLine < lines.length)
+            {
+                string ln = lines[currentLine].strip();
+
+                long diff = calculateBraceBalance(ln);
+
+                if (diff > 0 || ln.indexOf("{") != -1)
+                    sawBrace = true;
+
+                long oldBalance = braceBalance;
+                braceBalance += diff;
+
+                if (sawBrace && braceBalance == 0 && (diff < 0 || ln.indexOf("}") != -1))
+                {
+                    break;
+                }
+
+                if (sawBrace)
+                {
+                    if (ln.strip() == "/// ditto")
+                    {
+                        memberComments = lastMemberDocComment.dup;
+                    }
+                    else if (ln.startsWith("///") || ln.startsWith("/**")
+                            || ln.startsWith("/*") || ln.startsWith("/+") || ln.startsWith("/++"))
+                    {
+                        memberComments = [];
+                        memberComments ~= extractComment(ln);
+                        if (ln.startsWith("/**") || ln.startsWith("/*"))
+                        {
+                            while (currentLine < lines.length && !lines[currentLine].strip().endsWith("*/"))
+                            {
+                                currentLine++;
+                                if (currentLine < lines.length)
+                                {
+                                    string commentLine = lines[currentLine].strip();
+                                    if (commentLine != "*/")
+                                        memberComments ~= extractComment(commentLine);
+                                }
+                            }
+                        }
+                        else if (ln.startsWith("/+") || ln.startsWith("/++"))
+                        {
+                            long nesting = 0;
+                            nesting += ln.count("/+");
+                            nesting -= ln.count("+/");
+
+                            if (nesting > 0)
+                            {
+                                while (currentLine < lines.length)
+                                {
+                                    currentLine++;
+                                    if (currentLine < lines.length)
+                                    {
+                                        string commentLine = lines[currentLine].strip();
+                                        nesting += commentLine.count("/+");
+                                        nesting -= commentLine.count("+/");
+
+                                        if (nesting > 0 || !commentLine.endsWith("+/"))
+                                        {
+                                            memberComments ~= extractComment(commentLine);
+                                        }
+                                        else if (commentLine.length > 2 && commentLine != "+/")
+                                        {
+                                            memberComments ~= extractComment(commentLine);
+                                        }
+
+                                        if (nesting <= 0)
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if (ln.length > 0 && !ln.startsWith("//") && !ln.startsWith("}") && !ln.startsWith("{"))
+                    {
+                        EnumMemberDoc member;
+                        string memberDecl = ln;
+                        if (memberDecl.endsWith(","))
+                            memberDecl = memberDecl[0 .. $-1].strip();
+
+                        auto eqIndex = memberDecl.indexOf("=");
+                        if (eqIndex != -1)
+                        {
+                            member.name = memberDecl[0 .. eqIndex].strip();
+                            member.value = memberDecl[eqIndex + 1 .. $].strip();
+                        }
+                        else
+                        {
+                            member.name = memberDecl;
+                        }
+                        member.comments = memberComments;
+                        member.lineNumber = currentLine + 1;
+                        doc.members ~= member;
+
+                        if (memberComments.length > 0)
+                            lastMemberDocComment = memberComments.dup;
+                        memberComments = [];
+                    }
+                }
+                currentLine++;
+            }
+        }
+
+        return doc;
+    }
+
     private ClassDoc parseClass(string line, string[] comments)
     {
         ClassDoc doc;
@@ -742,6 +916,10 @@ class HTMLGenerator
             foreach (cls; mod.classes)
             {
                 typeLinks[cls.name] = format("%s.html#%s", sanitizeFilename(mod.name), cls.name);
+            }
+            foreach (en; mod.enums)
+            {
+                typeLinks[en.name] = format("%s.html#%s", sanitizeFilename(mod.name), en.name);
             }
         }
     }
@@ -970,6 +1148,63 @@ class HTMLGenerator
                         {
                             content.put("<div class=\"mt-2 pl-3 border-l border-blue-500/50\">\n");
                             content.put(formatComment(func.comments));
+                            content.put("</div>\n");
+                        }
+                        content.put("</div>\n");
+                    }
+                    content.put("</div>\n");
+                    content.put("</div>\n");
+                }
+
+                content.put("</div>\n");
+            }
+
+            content.put("</div>\n");
+            content.put("</section>\n");
+        }
+
+        if (mod.enums.length > 0)
+        {
+            content.put(
+                    "<section class=\"bg-card-bg rounded-xl shadow-lg border border-border-color overflow-hidden\">\n");
+            content.put("<div class=\"p-6 space-y-6\">\n");
+
+            foreach (en; mod.enums)
+            {
+                content.put("<div class=\"bg-gray-800/40 rounded-lg p-6 border border-border-color hover:border-red-500/50 transition-colors\">\n");
+                content.put(format(
+                        "<h3 id=\"%s\" class=\"text-xl font-semibold text-cyan-400 mb-3 flex items-center gap-2\">\n",
+                        escapeHTML(en.name)));
+                content.put("<span class=\"text-gray-500 text-sm font-normal uppercase tracking-wide\">ENUM</span>\n");
+                content.put(escapeHTML(en.name) ~ "\n");
+                content.put("</h3>\n");
+
+                if (en.comments.length > 0)
+                {
+                    content.put("<div class=\"mb-4 pl-4 border-l-2 border-red-500/50\">\n");
+                    content.put(formatComment(en.comments));
+                    content.put("</div>\n");
+                }
+
+                if (en.members.length > 0)
+                {
+                    content.put("<div class=\"mt-4\">\n");
+                    content.put(
+                            "<h4 class=\"text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2\">Members</h4>\n");
+                    content.put("<div class=\"space-y-2\">\n");
+                    foreach (member; en.members)
+                    {
+                        content.put("<div class=\"bg-code-bg rounded p-3 border border-border-color font-mono text-sm text-gray-300\">\n");
+                        content.put("<span class=\"text-blue-400 font-semibold\">" ~ escapeHTML(member.name) ~ "</span>");
+                        if (member.value.length > 0)
+                        {
+                             content.put(" = <span class=\"text-green-400\">" ~ escapeHTML(member.value) ~ "</span>");
+                        }
+                        
+                        if (member.comments.length > 0)
+                        {
+                            content.put("<div class=\"mt-2 pl-3 border-l border-blue-500/50 text-gray-400\">\n");
+                            content.put(formatComment(member.comments));
                             content.put("</div>\n");
                         }
                         content.put("</div>\n");
