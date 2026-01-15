@@ -190,6 +190,13 @@ class Parser
 
         string trimmed = line.strip();
 
+        if (trimmed.startsWith("this(") || trimmed.startsWith("~this(")
+                || trimmed.startsWith("public this(") || trimmed.startsWith("private this(")
+                || trimmed.startsWith("protected this("))
+        {
+            return true;
+        }
+
         if (trimmed.startsWith("if") || trimmed.startsWith("while")
                 || trimmed.startsWith("for") || trimmed.startsWith("switch") || trimmed.startsWith("foreach")
                 || trimmed.startsWith("return")
@@ -263,7 +270,19 @@ class Parser
         }
 
         auto beforeParen = line[0 .. parenPos].strip().split();
-        if (beforeParen.length >= 1)
+
+        string trimmed = line.strip();
+        if (trimmed.startsWith("this") || trimmed.indexOf(" this(") != -1)
+        {
+            doc.name = "this";
+            doc.returnType = "";
+        }
+        else if (trimmed.startsWith("~this") || trimmed.indexOf(" ~this(") != -1)
+        {
+            doc.name = "~this";
+            doc.returnType = "";
+        }
+        else if (beforeParen.length >= 1)
         {
             doc.name = beforeParen[$ - 1];
 
@@ -308,11 +327,9 @@ class Parser
             }
         }
 
-        // Scan body
         long braceBalance = 0;
         braceBalance += line.count("{");
         braceBalance -= line.count("}");
-
         bool sawBrace = line.indexOf("{") != -1;
 
         if (!sawBrace && line.strip().endsWith(";"))
@@ -764,7 +781,8 @@ class HTMLGenerator
                 }
                 else
                 {
-                    app.put(format("<div class=\"text-gray-400 ml-4\">%s</div>\n", escapeHTML(trimmed)));
+                    app.put(format("<div class=\"text-gray-400 ml-4\">%s</div>\n",
+                            escapeHTML(trimmed)));
                 }
             }
             else
