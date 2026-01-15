@@ -963,7 +963,7 @@ class HTMLGenerator
                 string privateClass = func.isPrivate ? " private-function" : "";
                 content.put(format("<div id=\"%s\" class=\"bg-gray-800/40 rounded-lg p-5 border border-border-color hover:border-blue-500/50 transition-colors%s\">\n",
                         escapeHTML(func.name), privateClass));
-                content.put("<div class=\"font-mono text-sm mb-3\">\n");
+                content.put("<div class=\"font-mono text-sm\">\n");
                 content.put(format("<span class=\"text-red-400\">%s</span> ",
                         escapeHTML(func.returnType)));
                 content.put(format("<span class=\"text-blue-400 font-semibold text-base\">%s</span>",
@@ -982,7 +982,7 @@ class HTMLGenerator
 
                 if (func.comments.length > 0)
                 {
-                    content.put("<div class=\"pl-4 border-l-2 border-blue-500/50\">\n");
+                    content.put("<div class=\"pl-4 border-l-2 border-red-500/50 mt-3\">\n");
                     content.put(formatComment(func.comments));
                     content.put("</div>\n");
                 }
