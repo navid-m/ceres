@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/ceres
+ceres.so
+ceres.dylib
+ceres.dll
+ceres.a
+ceres.lib
+ceres-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
