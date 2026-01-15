@@ -608,7 +608,6 @@ class Parser
                 if (diff > 0 || ln.indexOf("{") != -1)
                     sawBrace = true;
 
-                long oldBalance = braceBalance;
                 braceBalance += diff;
 
                 if (sawBrace && braceBalance == 0 && (diff < 0 || ln.indexOf("}") != -1))
@@ -629,7 +628,8 @@ class Parser
                         memberComments ~= extractComment(ln);
                         if (ln.startsWith("/**") || ln.startsWith("/*"))
                         {
-                            while (currentLine < lines.length && !lines[currentLine].strip().endsWith("*/"))
+                            while (currentLine < lines.length
+                                    && !lines[currentLine].strip().endsWith("*/"))
                             {
                                 currentLine++;
                                 if (currentLine < lines.length)
@@ -673,12 +673,13 @@ class Parser
                             }
                         }
                     }
-                    else if (ln.length > 0 && !ln.startsWith("//") && !ln.startsWith("}") && !ln.startsWith("{"))
+                    else if (ln.length > 0 && !ln.startsWith("//")
+                            && !ln.startsWith("}") && !ln.startsWith("{"))
                     {
                         EnumMemberDoc member;
                         string memberDecl = ln;
                         if (memberDecl.endsWith(","))
-                            memberDecl = memberDecl[0 .. $-1].strip();
+                            memberDecl = memberDecl[0 .. $ - 1].strip();
 
                         auto eqIndex = memberDecl.indexOf("=");
                         if (eqIndex != -1)
@@ -1175,7 +1176,8 @@ class HTMLGenerator
                 content.put(format(
                         "<h3 id=\"%s\" class=\"text-xl font-semibold text-cyan-400 mb-3 flex items-center gap-2\">\n",
                         escapeHTML(en.name)));
-                content.put("<span class=\"text-gray-500 text-sm font-normal uppercase tracking-wide\">ENUM</span>\n");
+                content.put(
+                        "<span class=\"text-gray-500 text-sm font-normal uppercase tracking-wide\">ENUM</span>\n");
                 content.put(escapeHTML(en.name) ~ "\n");
                 content.put("</h3>\n");
 
@@ -1195,15 +1197,18 @@ class HTMLGenerator
                     foreach (member; en.members)
                     {
                         content.put("<div class=\"bg-code-bg rounded p-3 border border-border-color font-mono text-sm text-gray-300\">\n");
-                        content.put("<span class=\"text-blue-400 font-semibold\">" ~ escapeHTML(member.name) ~ "</span>");
+                        content.put("<span class=\"text-blue-400 font-semibold\">" ~ escapeHTML(
+                                member.name) ~ "</span>");
                         if (member.value.length > 0)
                         {
-                             content.put(" = <span class=\"text-green-400\">" ~ escapeHTML(member.value) ~ "</span>");
+                            content.put(" = <span class=\"text-green-400\">" ~ escapeHTML(
+                                    member.value) ~ "</span>");
                         }
-                        
+
                         if (member.comments.length > 0)
                         {
-                            content.put("<div class=\"mt-2 pl-3 border-l border-blue-500/50 text-gray-400\">\n");
+                            content.put(
+                                    "<div class=\"mt-2 pl-3 border-l border-blue-500/50 text-gray-400\">\n");
                             content.put(formatComment(member.comments));
                             content.put("</div>\n");
                         }
