@@ -332,7 +332,7 @@ class Parser
             return false;
         }
 
-        auto parenPos = trimmed.indexOf("(");
+        auto parenPos = findFuncParenIndex(trimmed);
         if (parenPos > 0)
         {
             auto beforeParen = trimmed[0 .. parenPos].strip();
@@ -425,8 +425,10 @@ class Parser
             || trimmed.startsWith("private pure ") || trimmed.startsWith("private nothrow ")
             || (trimmed.startsWith("private") && !trimmed.startsWith("private("));
 
-        auto parenPos = line.indexOf("(");
-        auto closeParenPos = line.indexOf(")");
+        auto parenPos = findFuncParenIndex(line);
+        auto closeParenPos = -1;
+        if (parenPos != -1)
+            closeParenPos = cast(int) line.indexOf(")", parenPos);
 
         if (parenPos == -1 || closeParenPos == -1)
         {
@@ -459,10 +461,21 @@ class Parser
             }
         }
 
-        auto paramsStr = line[parenPos + 1 .. closeParenPos].strip();
-        if (paramsStr.length > 0)
+        try
         {
-            doc.parameters = paramsStr.split(",").map!(p => p.strip()).array;
+            if (line.length >= parenPos + 1 && line.length >= closeParenPos
+                    && parenPos + 1 < closeParenPos)
+            {
+                auto paramsStr = line[parenPos + 1 .. closeParenPos].strip();
+                if (paramsStr.length > 0)
+                {
+                    doc.parameters = paramsStr.split(",").map!(p => p.strip()).array;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            writeln("Error parsing parameters: ", e.msg);
         }
 
         return doc;
@@ -672,6 +685,28 @@ class Parser
         }
 
         return doc;
+    }
+
+    private ptrdiff_t findFuncParenIndex(string str)
+    {
+        auto firstParen = str.indexOf("(");
+        if (firstParen == -1)
+            return -1;
+
+        auto externPos = str.indexOf("extern");
+        if (externPos != -1 && externPos < firstParen)
+        {
+            auto between = str[externPos + 6 .. firstParen].strip();
+            if (between.length == 0)
+            {
+                auto closeParen = str.indexOf(")", firstParen);
+                if (closeParen != -1)
+                {
+                    return str.indexOf("(", closeParen);
+                }
+            }
+        }
+        return firstParen;
     }
 }
 
@@ -1142,13 +1177,13 @@ ProjectInfo detectProject(string path)
     return info;
 }
 
-/** 
+/**
  * Find D files.
  *
  * Params:
  *   rootPath = The root path to search
- * 
- * Returns: The string array of D file paths 
+ *
+ * Returns: The string array of D file paths
  */
 string[] findDFiles(string rootPath)
 {
