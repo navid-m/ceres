@@ -388,13 +388,13 @@ class HTMLGenerator
     private void buildTypeLinks()
     {
         typeLinks["string"] = "https://dlang.org/phobos/std_string.html";
-        typeLinks["int"] = "https://dlang.org/spec/type.html";
-        typeLinks["bool"] = "https://dlang.org/spec/type.html";
-        typeLinks["void"] = "https://dlang.org/spec/type.html";
-        typeLinks["float"] = "https://dlang.org/spec/type.html";
-        typeLinks["double"] = "https://dlang.org/spec/type.html";
-        typeLinks["size_t"] = "https://dlang.org/library/object/size_t.html";
-        typeLinks["Object"] = "https://dlang.org/library/object/object.html";
+        typeLinks["int"] = "https://dlang.org/spec/type.html#int";
+        typeLinks["bool"] = "https://dlang.org/spec/type.html#bool";
+        typeLinks["void"] = "https://dlang.org/spec/type.html#void";
+        typeLinks["float"] = "https://dlang.org/spec/type.html#float";
+        typeLinks["double"] = "https://dlang.org/spec/type.html#double";
+        typeLinks["size_t"] = "https://dlang.org/spec/type.html#size_t";
+        typeLinks["Object"] = "https://dlang.org/spec/type.html#Object";
 
         foreach (mod; modules)
         {
@@ -497,17 +497,6 @@ class HTMLGenerator
         {
             content.put(
                     "<section class=\"bg-card-bg rounded-xl shadow-lg border border-border-color overflow-hidden\">\n");
-            content.put(
-                    "<div class=\"p-6 border-b border-border-color bg-gradient-to-r from-blue-900/20 to-transparent\">\n");
-            content.put(
-                    "<h2 class=\"text-2xl font-semibold text-white flex items-center gap-2\">\n");
-            content.put(
-                    "<svg class=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n");
-            content.put("<path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10\"></path>\n");
-            content.put("</svg>\n");
-            content.put("Classes and Structures\n");
-            content.put("</h2>\n");
-            content.put("</div>\n");
             content.put("<div class=\"p-6 space-y-6\">\n");
 
             foreach (cls; mod.classes)
