@@ -8,6 +8,9 @@ import std.conv;
 import std.regex;
 import std.json;
 
+/** 
+ * A function documentation.
+ */
 struct FunctionDoc
 {
     string name;
@@ -17,6 +20,9 @@ struct FunctionDoc
     size_t lineNumber;
 }
 
+/** 
+ * Some documentation about a class.
+ */
 struct ClassDoc
 {
     string name;
@@ -151,10 +157,7 @@ class Parser
         return line.strip();
     }
 
-    private string extractModuleName(string filepath)
-    {
-        return baseName(filepath, ".d");
-    }
+    private string extractModuleName(string filepath) => baseName(filepath, ".d");
 
     private string extractModuleDeclaration(string line)
     {
@@ -174,9 +177,7 @@ class Parser
     private bool isFunction(string line)
     {
         if (line.indexOf("(") == -1 || line.indexOf(")") == -1)
-        {
             return false;
-        }
 
         string trimmed = line.strip();
 
@@ -189,9 +190,7 @@ class Parser
         }
 
         if (trimmed.indexOf("=") != -1 && trimmed.indexOf("=") < trimmed.indexOf("("))
-        {
             return false;
-        }
 
         auto parenPos = trimmed.indexOf("(");
         if (parenPos > 0)
@@ -199,9 +198,7 @@ class Parser
             auto beforeParen = trimmed[0 .. parenPos].strip();
 
             if (beforeParen.indexOf(".") != -1)
-            {
                 return false;
-            }
 
             auto words = beforeParen.split();
             if (words.length < 2)
@@ -343,13 +340,13 @@ class HTMLGenerator
         f.writeln("<head>");
         f.writeln("    <meta charset=\"UTF-8\">");
         f.writeln("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
-        f.writeln("    <title>Ceres Documentation</title>");
+        f.writeln("    <title>Docs</title>");
         f.writeln("    <link rel=\"stylesheet\" href=\"style.css\">");
         f.writeln("</head>");
         f.writeln("<body>");
         f.writeln("    <div class=\"container\">");
         f.writeln("        <header>");
-        f.writeln("            <h1>Ceres Documentation</h1>");
+        f.writeln("            <h1>Docs</h1>");
         f.writeln("        </header>");
         f.writeln("        <main>");
         f.writeln("            <section class=\"module-list\">");
@@ -382,7 +379,7 @@ class HTMLGenerator
         f.writeln("<head>");
         f.writeln("    <meta charset=\"UTF-8\">");
         f.writeln("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
-        f.writefln("    <title>%s - Ceres Documentation</title>", escapeHTML(mod.name));
+        f.writefln("    <title>%s - Docs</title>", escapeHTML(mod.name));
         f.writeln("    <link rel=\"stylesheet\" href=\"style.css\">");
         f.writeln("</head>");
         f.writeln("<body>");
