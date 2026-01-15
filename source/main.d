@@ -438,11 +438,68 @@ class HTMLGenerator
         }
 
         generateIndex();
+        generateSearchIndex();
 
         foreach (mod; modules)
         {
             generateModulePage(mod);
         }
+    }
+
+    private void generateSearchIndex()
+    {
+        JSONValue[] items;
+
+        foreach (mod; modules)
+        {
+            string modFile = sanitizeFilename(mod.name) ~ ".html";
+
+            // Add module
+            JSONValue modItem;
+            modItem["name"] = JSONValue(mod.name);
+            modItem["type"] = JSONValue("module");
+            modItem["link"] = JSONValue(modFile);
+            items ~= modItem;
+
+            foreach (cls; mod.classes)
+            {
+                string link = modFile ~ "#" ~ cls.name;
+                JSONValue clsItem;
+                clsItem["name"] = JSONValue(cls.name);
+                clsItem["type"] = JSONValue(cls.type);
+                clsItem["link"] = JSONValue(link);
+                clsItem["module"] = JSONValue(mod.name);
+                items ~= clsItem;
+
+                foreach (method; cls.methods)
+                {
+                    string methodId = cls.name ~ "." ~ method.name;
+                    string mLink = modFile ~ "#" ~ methodId;
+                    JSONValue mItem;
+                    mItem["name"] = JSONValue(method.name);
+                    mItem["type"] = JSONValue("method");
+                    mItem["parent"] = JSONValue(cls.name);
+                    mItem["link"] = JSONValue(mLink);
+                    mItem["module"] = JSONValue(mod.name);
+                    items ~= mItem;
+                }
+            }
+
+            foreach (func; mod.functions)
+            {
+                string fLink = modFile ~ "#" ~ func.name;
+                JSONValue fItem;
+                fItem["name"] = JSONValue(func.name);
+                fItem["type"] = JSONValue("function");
+                fItem["link"] = JSONValue(fLink);
+                fItem["module"] = JSONValue(mod.name);
+                items ~= fItem;
+            }
+        }
+
+        auto f = File(buildPath(outputDir, "search_index.js"), "w");
+        f.write("const searchIndex = " ~ JSONValue(items).toString() ~ ";");
+        f.close();
     }
 
     private void generateIndex()
@@ -545,8 +602,10 @@ class HTMLGenerator
                     content.put("<div class=\"space-y-3\">\n");
                     foreach (func; cls.methods)
                     {
-                        content.put(
-                                "<div class=\"bg-code-bg rounded-lg p-4 border border-border-color\">\n");
+                        string methodId = cls.name ~ "." ~ func.name;
+                        content.put(format(
+                                "<div id=\"%s\" class=\"bg-code-bg rounded-lg p-4 border border-border-color\">\n",
+                                escapeHTML(methodId)));
                         content.put("<div class=\"font-mono text-sm mb-2\">\n");
                         content.put(format("<span class=\"text-red-400\">%s</span> ",
                                 escapeHTML(func.returnType)));
@@ -606,7 +665,7 @@ class HTMLGenerator
 
             foreach (func; mod.functions)
             {
-                content.put("<div class=\"bg-gray-800/40 rounded-lg p-5 border border-border-color hover:border-blue-500/50 transition-colors\">\n");
+                content.put(format("<div id=\"%s\" class=\"bg-gray-800/40 rounded-lg p-5 border border-border-color hover:border-blue-500/50 transition-colors\">\n", escapeHTML(func.name)));
                 content.put("<div class=\"font-mono text-sm mb-3\">\n");
                 content.put(format("<span class=\"text-red-400\">%s</span> ",
                         escapeHTML(func.returnType)));

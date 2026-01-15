@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Documentation</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="search_index.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -22,9 +23,15 @@
 <body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-6xl">
         <header class="mb-8">
-            <div class="bg-gradient-to-r from-blue-600 to-red-600 rounded-2xl p-8 shadow-2xl">
-                <h1 class="text-4xl font-bold text-white mb-2">Docs</h1>
-                <p class="text-blue-100 text-lg">Browse all available modules</p>
+            <div class="bg-gradient-to-r from-blue-600 to-red-600 rounded-2xl p-8 shadow-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2">Docs</h1>
+                    <p class="text-blue-100 text-lg">Browse all available modules</p>
+                </div>
+                <div class="relative w-full md:w-64">
+                    <input type="text" id="global-search" placeholder="Search docs..." class="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-4 py-2 text-white placeholder-blue-100 focus:outline-none focus:bg-white/20 focus:border-white/50 transition-colors">
+                    <div id="search-results" class="absolute z-50 w-full mt-2 bg-card-bg border border-border-color rounded-lg shadow-xl hidden max-h-96 overflow-y-auto"></div>
+                </div>
             </div>
         </header>
 
@@ -52,5 +59,41 @@
             <p>Generated with Ceres</p>
         </footer>
     </div>
+
+    <script>
+        const searchInput = document.getElementById('global-search');
+        const searchResults = document.getElementById('search-results');
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            if (query.length < 2) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+
+            const results = searchIndex.filter(item => 
+                item.name.toLowerCase().includes(query) || 
+                (item.module && item.module.toLowerCase().includes(query))
+            ).slice(0, 10);
+
+            if (results.length > 0) {
+                searchResults.innerHTML = results.map(item => `
+                    <a href="${item.link}" class="block p-3 hover:bg-gray-800 border-b border-border-color last:border-0 text-left">
+                        <div class="text-sm font-semibold text-blue-400">${item.name}</div>
+                        <div class="text-xs text-gray-500">${item.type} ${item.module ? 'in ' + item.module : ''}</div>
+                    </a>
+                `).join('');
+                searchResults.classList.remove('hidden');
+            } else {
+                searchResults.classList.add('hidden');
+            }
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>
