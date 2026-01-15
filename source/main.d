@@ -715,13 +715,15 @@ class HTMLGenerator
     private ModuleDoc[] modules;
     private string outputDir;
     private string projectName;
+    private string licenseType;
     private string[string] typeLinks;
 
-    this(ModuleDoc[] modules, string outputDir, string projectName)
+    this(ModuleDoc[] modules, string outputDir, string projectName, string licenseType = "")
     {
         this.modules = modules;
         this.outputDir = outputDir;
         this.projectName = projectName.length > 0 ? projectName : "Project";
+        this.licenseType = licenseType;
         buildTypeLinks();
     }
 
@@ -864,6 +866,14 @@ class HTMLGenerator
 
         string output = templateContent.replace("{{modules_list}}", listContent.data);
         output = output.replace("{{project_name}}", escapeHTML(projectName));
+        
+        string licenseInfo = "";
+        if (licenseType.length > 0)
+        {
+            licenseInfo = " - License: " ~ escapeHTML(licenseType);
+        }
+        output = output.replace("{{license_info}}", licenseInfo);
+
         f.write(output);
         f.close();
     }
@@ -1108,6 +1118,7 @@ struct ProjectInfo
     bool isDubProject;
     string projectName;
     string[] sourceDirectories;
+    string licenseType;
 }
 
 ProjectInfo detectProject(string path)
@@ -1118,6 +1129,49 @@ ProjectInfo detectProject(string path)
 
     string dubJsonPath = buildPath(path, "dub.json");
     string dubSdlPath = buildPath(path, "dub.sdl");
+    string licensePath = buildPath(path, "LICENSE");
+    string licenseMdPath = buildPath(path, "LICENSE.md");
+
+    if (exists(licensePath))
+    {
+        try
+        {
+            string content = readText(licensePath);
+            if (content.canFind("MIT License")) info.licenseType = "MIT";
+            else if (content.canFind("Apache License 2.0") || content.canFind("Apache-2.0")) info.licenseType = "Apache 2.0";
+            else if (content.canFind("GNU General Public License") || content.canFind("GPL")) info.licenseType = "GPL";
+            else if (content.canFind("BSD 3-Clause")) info.licenseType = "BSD 3-Clause";
+            else if (content.canFind("BSD 2-Clause")) info.licenseType = "BSD 2-Clause";
+            else if (content.canFind("ISC License")) info.licenseType = "ISC";
+            else if (content.canFind("Mozilla Public License 2.0")) info.licenseType = "MPL 2.0";
+            else if (content.canFind("The Unlicense")) info.licenseType = "Unlicense";
+            else info.licenseType = "Custom";
+        }
+        catch (Exception e)
+        {
+            writeln("Warning: Failed to read LICENSE file");
+        }
+    }
+    else if (exists(licenseMdPath))
+    {
+        try
+        {
+            string content = readText(licenseMdPath);
+            if (content.canFind("MIT License")) info.licenseType = "MIT";
+            else if (content.canFind("Apache License 2.0") || content.canFind("Apache-2.0")) info.licenseType = "Apache 2.0";
+            else if (content.canFind("GNU General Public License") || content.canFind("GPL")) info.licenseType = "GPL";
+            else if (content.canFind("BSD 3-Clause")) info.licenseType = "BSD 3-Clause";
+            else if (content.canFind("BSD 2-Clause")) info.licenseType = "BSD 2-Clause";
+            else if (content.canFind("ISC License")) info.licenseType = "ISC";
+            else if (content.canFind("Mozilla Public License 2.0")) info.licenseType = "MPL 2.0";
+            else if (content.canFind("The Unlicense")) info.licenseType = "Unlicense";
+            else info.licenseType = "Custom";
+        }
+        catch (Exception e)
+        {
+            writeln("Warning: Failed to read LICENSE.md file");
+        }
+    }
 
     if (exists(dubJsonPath))
     {
@@ -1302,7 +1356,7 @@ void main(string[] args)
     string outputDir = "docs";
     writeln("Generating documentation in ./", outputDir);
 
-    auto generator = new HTMLGenerator(modules, outputDir, toTitleCase(projectInfo.projectName));
+    auto generator = new HTMLGenerator(modules, outputDir, toTitleCase(projectInfo.projectName), projectInfo.licenseType);
     generator.generate();
 
     writeln("Documentation generated successfully.");
