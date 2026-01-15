@@ -1,0 +1,131 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background: #2c3e50;
+    color: white;
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+header nav a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+header nav a:hover {
+    text-decoration: underline;
+}
+
+main {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+h2 {
+    color: #2c3e50;
+    font-size: 2em;
+    margin: 30px 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #3498db;
+}
+
+h3 {
+    color: #34495e;
+    font-size: 1.5em;
+    margin: 20px 0 10px 0;
+}
+
+.module-list ul {
+    list-style: none;
+}
+
+.module-list li {
+    margin: 10px 0;
+    padding: 15px;
+    background: #ecf0f1;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.module-list li:hover {
+    background: #d5dbdb;
+}
+
+.module-list a {
+    color: #2980b9;
+    text-decoration: none;
+    font-size: 1.2em;
+    font-weight: 500;
+}
+
+.function-doc, .class-doc {
+    margin: 25px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-left: 4px solid #3498db;
+    border-radius: 4px;
+}
+
+.signature {
+    font-family: 'Courier New', monospace;
+    background: #2c3e50;
+    color: #ecf0f1;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    overflow-x: auto;
+}
+
+.return-type {
+    color: #e74c3c;
+}
+
+.function-name {
+    color: #3498db;
+    font-weight: bold;
+}
+
+.parameters {
+    color: #95a5a6;
+}
+
+.description {
+    line-height: 1.8;
+}
+
+.description p {
+    margin: 10px 0;
+}
+
+.module-description {
+    padding: 20px;
+    background: #e8f4f8;
+    border-radius: 5px;
+    margin-bottom: 30px;
+}

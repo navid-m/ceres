@@ -7,6 +7,7 @@ import std.string;
 import std.conv;
 import std.regex;
 import std.json;
+import std.format;
 
 /** 
  * A function documentation.
@@ -322,38 +323,18 @@ class HTMLGenerator
     private void generateIndex()
     {
         auto f = File(buildPath(outputDir, "index.html"), "w");
+        string templateContent = import("index_template.html");
 
-        f.writeln("<!DOCTYPE html>");
-        f.writeln("<html lang=\"en\">");
-        f.writeln("<head>");
-        f.writeln("    <meta charset=\"UTF-8\">");
-        f.writeln("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
-        f.writeln("    <title>Docs</title>");
-        f.writeln("    <link rel=\"stylesheet\" href=\"style.css\">");
-        f.writeln("</head>");
-        f.writeln("<body>");
-        f.writeln("    <div class=\"container\">");
-        f.writeln("        <header>");
-        f.writeln("            <h1>Docs</h1>");
-        f.writeln("        </header>");
-        f.writeln("        <main>");
-        f.writeln("            <section class=\"module-list\">");
-        f.writeln("                <h2>Modules</h2>");
-        f.writeln("                <ul>");
+        auto listContent = appender!string;
 
         foreach (mod; modules)
         {
-            f.writefln("                    <li><a href=\"%s.html\">%s</a></li>",
-                    sanitizeFilename(mod.name), escapeHTML(mod.name));
+            listContent.put(format("                    <li><a href=\"%s.html\">%s</a></li>\n",
+                    sanitizeFilename(mod.name), escapeHTML(mod.name)));
         }
 
-        f.writeln("                </ul>");
-        f.writeln("            </section>");
-        f.writeln("        </main>");
-        f.writeln("    </div>");
-        f.writeln("</body>");
-        f.writeln("</html>");
-
+        string output = templateContent.replace("{{modules_list}}", listContent.data);
+        f.write(output);
         f.close();
     }
 
@@ -361,245 +342,99 @@ class HTMLGenerator
     {
         auto filename = buildPath(outputDir, sanitizeFilename(mod.name) ~ ".html");
         auto f = File(filename, "w");
+        string templateContent = import("module_template.html");
 
-        f.writeln("<!DOCTYPE html>");
-        f.writeln("<html lang=\"en\">");
-        f.writeln("<head>");
-        f.writeln("    <meta charset=\"UTF-8\">");
-        f.writeln("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
-        f.writefln("    <title>%s - Docs</title>", escapeHTML(mod.name));
-        f.writeln("    <link rel=\"stylesheet\" href=\"style.css\">");
-        f.writeln("</head>");
-        f.writeln("<body>");
-        f.writeln("    <div class=\"container\">");
-        f.writeln("        <header>");
-        f.writefln("            <h1>Module: %s</h1>", escapeHTML(mod.name));
-        f.writeln("            <nav><a href=\"index.html\">Back to Index</a></nav>");
-        f.writeln("        </header>");
-        f.writeln("        <main>");
+        auto content = appender!string;
 
         if (mod.comments.length > 0)
         {
-            f.writeln("            <section class=\"module-description\">");
+            content.put("<section class=\"module-description\">\n");
             foreach (comment; mod.comments)
             {
-                f.writefln("                <p>%s</p>", escapeHTML(comment));
+                content.put(format("<p>%s</p>\n", escapeHTML(comment)));
             }
-            f.writeln("            </section>");
+            content.put("</section>\n");
         }
 
         if (mod.classes.length > 0)
         {
-            f.writeln("            <section class=\"classes\">");
-            f.writeln("                <h2>Classes and Structures</h2>");
+            content.put("<section class=\"classes\">\n");
+            content.put("<h2>Classes and Structures</h2>\n");
 
             foreach (cls; mod.classes)
             {
-                f.writeln("                <div class=\"class-doc\">");
-                f.writefln("                    <h3>%s %s</h3>",
-                        escapeHTML(cls.type), escapeHTML(cls.name));
+                content.put("<div class=\"class-doc\">\n");
+                content.put(format("<h3>%s %s</h3>\n", escapeHTML(cls.type), escapeHTML(cls.name)));
 
                 if (cls.comments.length > 0)
                 {
-                    f.writeln("                    <div class=\"description\">");
+                    content.put("<div class=\"description\">\n");
                     foreach (comment; cls.comments)
                     {
-                        f.writefln("                        <p>%s</p>", escapeHTML(comment));
+                        content.put(format("<p>%s</p>\n", escapeHTML(comment)));
                     }
-                    f.writeln("                    </div>");
+                    content.put("</div>\n");
                 }
 
-                f.writeln("                </div>");
+                content.put("</div>\n");
             }
 
-            f.writeln("            </section>");
+            content.put("</section>\n");
         }
 
         if (mod.functions.length > 0)
         {
-            f.writeln("            <section class=\"functions\">");
-            f.writeln("                <h2>Functions</h2>");
+            content.put("<section class=\"functions\">\n");
+            content.put("<h2>Functions</h2>\n");
 
             foreach (func; mod.functions)
             {
-                f.writeln("                <div class=\"function-doc\">");
-                f.writeln("                    <div class=\"signature\">");
-                f.writefln("                        <span class=\"return-type\">%s</span> ",
-                        escapeHTML(func.returnType));
-                f.writefln("                        <span class=\"function-name\">%s</span>",
-                        escapeHTML(func.name));
-                f.write("                        <span class=\"parameters\">(");
+                content.put("<div class=\"function-doc\">\n");
+                content.put("<div class=\"signature\">\n");
+                content.put(format("<span class=\"return-type\">%s</span> \n",
+                        escapeHTML(func.returnType)));
+                content.put(format("<span class=\"function-name\">%s</span>",
+                        escapeHTML(func.name)));
+                content.put("<span class=\"parameters\">(");
 
                 foreach (i, param; func.parameters)
                 {
                     if (i > 0)
-                        f.write(", ");
-                    f.write(escapeHTML(param));
+                        content.put(", ");
+                    content.put(escapeHTML(param));
                 }
 
-                f.writeln(")</span>");
-                f.writeln("                    </div>");
+                content.put(")</span>\n");
+                content.put("</div>\n");
 
                 if (func.comments.length > 0)
                 {
-                    f.writeln("                    <div class=\"description\">");
+                    content.put("<div class=\"description\">\n");
                     foreach (comment; func.comments)
                     {
-                        f.writefln("                        <p>%s</p>", escapeHTML(comment));
+                        content.put(format("<p>%s</p>\n", escapeHTML(comment)));
                     }
-                    f.writeln("                    </div>");
+                    content.put("</div>\n");
                 }
 
-                f.writeln("                </div>");
+                content.put("</div>\n");
             }
 
-            f.writeln("            </section>");
+            content.put("</section>\n");
         }
 
-        f.writeln("        </main>");
-        f.writeln("    </div>");
-        f.writeln("</body>");
-        f.writeln("</html>");
+        string output = templateContent.replace("{{module_name}}", escapeHTML(mod.name));
+        output = output.replace("{{content}}", content.data);
 
+        f.write(output);
         f.close();
     }
 
     private void generateCSS()
     {
         auto f = File(buildPath(outputDir, "style.css"), "w");
-
-        f.writeln("* {");
-        f.writeln("    margin: 0;");
-        f.writeln("    padding: 0;");
-        f.writeln("    box-sizing: border-box;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln("body {");
-        f.writeln("    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;");
-        f.writeln("    line-height: 1.6;");
-        f.writeln("    color: #333;");
-        f.writeln("    background: #f5f5f5;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".container {");
-        f.writeln("    max-width: 1200px;");
-        f.writeln("    margin: 0 auto;");
-        f.writeln("    padding: 20px;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln("header {");
-        f.writeln("    background: #2c3e50;");
-        f.writeln("    color: white;");
-        f.writeln("    padding: 30px;");
-        f.writeln("    border-radius: 8px;");
-        f.writeln("    margin-bottom: 30px;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln("header h1 {");
-        f.writeln("    font-size: 2.5em;");
-        f.writeln("    margin-bottom: 10px;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln("header nav a {");
-        f.writeln("    color: #3498db;");
-        f.writeln("    text-decoration: none;");
-        f.writeln("    font-weight: 500;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln("header nav a:hover {");
-        f.writeln("    text-decoration: underline;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln("main {");
-        f.writeln("    background: white;");
-        f.writeln("    padding: 30px;");
-        f.writeln("    border-radius: 8px;");
-        f.writeln("    box-shadow: 0 2px 4px rgba(0,0,0,0.1);");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln("h2 {");
-        f.writeln("    color: #2c3e50;");
-        f.writeln("    font-size: 2em;");
-        f.writeln("    margin: 30px 0 20px 0;");
-        f.writeln("    padding-bottom: 10px;");
-        f.writeln("    border-bottom: 2px solid #3498db;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln("h3 {");
-        f.writeln("    color: #34495e;");
-        f.writeln("    font-size: 1.5em;");
-        f.writeln("    margin: 20px 0 10px 0;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".module-list ul {");
-        f.writeln("    list-style: none;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".module-list li {");
-        f.writeln("    margin: 10px 0;");
-        f.writeln("    padding: 15px;");
-        f.writeln("    background: #ecf0f1;");
-        f.writeln("    border-radius: 5px;");
-        f.writeln("    transition: background 0.3s;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".module-list li:hover {");
-        f.writeln("    background: #d5dbdb;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".module-list a {");
-        f.writeln("    color: #2980b9;");
-        f.writeln("    text-decoration: none;");
-        f.writeln("    font-size: 1.2em;");
-        f.writeln("    font-weight: 500;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".function-doc, .class-doc {");
-        f.writeln("    margin: 25px 0;");
-        f.writeln("    padding: 20px;");
-        f.writeln("    background: #f8f9fa;");
-        f.writeln("    border-left: 4px solid #3498db;");
-        f.writeln("    border-radius: 4px;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".signature {");
-        f.writeln("    font-family: 'Courier New', monospace;");
-        f.writeln("    background: #2c3e50;");
-        f.writeln("    color: #ecf0f1;");
-        f.writeln("    padding: 15px;");
-        f.writeln("    border-radius: 4px;");
-        f.writeln("    margin-bottom: 15px;");
-        f.writeln("    overflow-x: auto;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".return-type {");
-        f.writeln("    color: #e74c3c;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".function-name {");
-        f.writeln("    color: #3498db;");
-        f.writeln("    font-weight: bold;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".parameters {");
-        f.writeln("    color: #95a5a6;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".description {");
-        f.writeln("    line-height: 1.8;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".description p {");
-        f.writeln("    margin: 10px 0;");
-        f.writeln("}");
-        f.writeln("");
-        f.writeln(".module-description {");
-        f.writeln("    padding: 20px;");
-        f.writeln("    background: #e8f4f8;");
-        f.writeln("    border-radius: 5px;");
-        f.writeln("    margin-bottom: 30px;");
-        f.writeln("}");
-
+        string cssContent = import("style.css");
+        f.write(cssContent);
         f.close();
     }
 

@@ -4,6 +4,9 @@
 	],
 	"copyright": "Copyright © 2026, Navid",
 	"description": "Documentation generator for D",
+	"stringImportPaths": [
+		"views"
+	],
 	"license": "GPL-3.0-only",
 	"name": "ceres"
 }
