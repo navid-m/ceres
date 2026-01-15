@@ -564,11 +564,7 @@ class HTMLGenerator
             content.put(
                     "<section class=\"bg-card-bg rounded-xl p-6 shadow-lg border border-border-color\">\n");
             content.put("<div class=\"prose prose-invert max-w-none\">\n");
-            foreach (comment; mod.comments)
-            {
-                content.put(format("<p class=\"text-gray-300 leading-relaxed\">%s</p>\n",
-                        escapeHTML(comment)));
-            }
+            content.put(formatComment(mod.comments));
             content.put("</div>\n");
             content.put("</section>\n");
         }
@@ -593,11 +589,7 @@ class HTMLGenerator
                 if (cls.comments.length > 0)
                 {
                     content.put("<div class=\"mb-4 pl-4 border-l-2 border-red-500/50\">\n");
-                    foreach (comment; cls.comments)
-                    {
-                        content.put(format("<p class=\"text-gray-300 leading-relaxed\">%s</p>\n",
-                                escapeHTML(comment)));
-                    }
+                    content.put(formatComment(cls.comments));
                     content.put("</div>\n");
                 }
 
@@ -649,11 +641,7 @@ class HTMLGenerator
                         if (func.comments.length > 0)
                         {
                             content.put("<div class=\"mt-2 pl-3 border-l border-blue-500/50\">\n");
-                            foreach (comment; func.comments)
-                            {
-                                content.put(format("<p class=\"text-gray-400 text-sm\">%s</p>\n",
-                                        escapeHTML(comment)));
-                            }
+                            content.put(formatComment(func.comments));
                             content.put("</div>\n");
                         }
                         content.put("</div>\n");
@@ -710,11 +698,7 @@ class HTMLGenerator
                 if (func.comments.length > 0)
                 {
                     content.put("<div class=\"pl-4 border-l-2 border-blue-500/50\">\n");
-                    foreach (comment; func.comments)
-                    {
-                        content.put(format("<p class=\"text-gray-300 leading-relaxed\">%s</p>\n",
-                                escapeHTML(comment)));
-                    }
+                    content.put(formatComment(func.comments));
                     content.put("</div>\n");
                 }
 
@@ -730,6 +714,71 @@ class HTMLGenerator
 
         f.write(output);
         f.close();
+    }
+
+    private string formatComment(string[] comments)
+    {
+        auto app = appender!string;
+        bool insideParams = false;
+
+        foreach (line; comments)
+        {
+            string trimmed = line.strip();
+
+            if (trimmed == "Params:")
+            {
+                if (insideParams)
+                    app.put("</ul>\n");
+                insideParams = true;
+                app.put("<div class=\"font-bold text-gray-200 mt-4 mb-2\">Params:</div>\n");
+                app.put("<ul class=\"list-none pl-4 space-y-2 mb-4\">\n");
+                continue;
+            }
+
+            if (trimmed.startsWith("Returns:"))
+            {
+                if (insideParams)
+                {
+                    app.put("</ul>\n");
+                    insideParams = false;
+                }
+
+                string content = trimmed[8 .. $].strip();
+                app.put(format("<div class=\"mt-4 text-gray-300\"><span class=\"font-bold text-gray-200\">Returns:</span> %s</div>\n",
+                        escapeHTML(content)));
+                continue;
+            }
+
+            if (insideParams)
+            {
+                if (trimmed.length == 0)
+                    continue;
+
+                auto eqPos = trimmed.indexOf('=');
+                if (eqPos != -1)
+                {
+                    string pName = trimmed[0 .. eqPos].strip();
+                    string pDesc = trimmed[eqPos + 1 .. $].strip();
+                    app.put(format("<li><span class=\"font-mono text-blue-300 font-semibold\">%s</span> <span class=\"text-gray-400\">%s</span></li>\n",
+                            escapeHTML(pName), escapeHTML(pDesc)));
+                }
+                else
+                {
+                    app.put(format("<div class=\"text-gray-400 ml-4\">%s</div>\n", escapeHTML(trimmed)));
+                }
+            }
+            else
+            {
+                if (trimmed.length > 0)
+                    app.put(format("<p class=\"text-gray-300 leading-relaxed\">%s</p>\n",
+                            escapeHTML(trimmed)));
+            }
+        }
+
+        if (insideParams)
+            app.put("</ul>\n");
+
+        return app.data;
     }
 
     private string escapeHTML(string text)
