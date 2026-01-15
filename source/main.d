@@ -34,6 +34,9 @@ struct ClassDoc
     size_t lineNumber;
 }
 
+/** 
+ * Some documentation about a module. 
+ */
 struct ModuleDoc
 {
     string name;
@@ -44,12 +47,21 @@ struct ModuleDoc
     string[] imports;
 }
 
+/** 
+ * Parser for Dlang files.
+ */
 class Parser
 {
     private string content;
     private string[] lines;
     private size_t currentLine;
 
+    /** 
+     * Construct a new parser instance
+     *
+     * Params:
+     *   content = The content to parse 
+     */
     this(string content)
     {
         this.content = content;
@@ -57,6 +69,14 @@ class Parser
         this.currentLine = 0;
     }
 
+    /** 
+     * Parse a file into a ModuleDoc instance.
+     *
+     * Params:
+     *   filepath = The path of the file
+     * 
+     * Returns: The corresponding ModuleDoc instance 
+     */
     ModuleDoc parse(string filepath)
     {
         ModuleDoc doc;
