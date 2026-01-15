@@ -288,6 +288,84 @@ class Parser
             }
         }
 
+        // Scan body
+        long braceBalance = 0;
+        braceBalance += line.count("{");
+        braceBalance -= line.count("}");
+
+        bool sawBrace = line.indexOf("{") != -1;
+
+        if (!sawBrace && line.strip().endsWith(";"))
+            return doc;
+
+        if (braceBalance > 0 || !sawBrace)
+        {
+            string[] memberComments;
+            currentLine++;
+
+            while (currentLine < lines.length)
+            {
+                string ln = lines[currentLine].strip();
+
+                long open = ln.count("{");
+                long close = ln.count("}");
+
+                if (open > 0)
+                    sawBrace = true;
+
+                long oldBalance = braceBalance;
+                braceBalance += (open - close);
+
+                if (sawBrace && braceBalance == 0 && close > 0)
+                {
+                    break;
+                }
+
+                if (sawBrace)
+                {
+                    if (ln.startsWith("///") || ln.startsWith("/**") || ln.startsWith("/*"))
+                    {
+                        memberComments ~= extractComment(ln);
+                        if (ln.startsWith("/**") || ln.startsWith("/*"))
+                        {
+                            while (currentLine < lines.length && !lines[currentLine].strip().endsWith("*/"))
+                            {
+                                currentLine++;
+                                if (currentLine < lines.length)
+                                {
+                                    string commentLine = lines[currentLine].strip();
+                                    if (commentLine != "*/")
+                                        memberComments ~= extractComment(commentLine);
+                                }
+                            }
+                        }
+                    }
+                    else if (isFunction(ln))
+                    {
+                        if (oldBalance == 1)
+                        {
+                            auto func = parseFunction(ln, memberComments);
+                            if (func.name.length > 0)
+                                doc.methods ~= func;
+                            memberComments = [];
+                        }
+                    }
+                    else if (ln.startsWith("class ") || ln.startsWith("struct ")
+                            || ln.startsWith("interface ") || ln.startsWith("enum "))
+                    {
+                         memberComments = [];
+                    }
+                    else if (ln.length > 0 && !ln.startsWith("//") && !ln.startsWith("}")
+                            && !ln.startsWith("{") && braceBalance == 1 && ln.endsWith(";"))
+                    {
+                        doc.fields ~= ln;
+                        memberComments = [];
+                    }
+                }
+                currentLine++;
+            }
+        }
+
         return doc;
     }
 }
@@ -372,6 +450,57 @@ class HTMLGenerator
                     foreach (comment; cls.comments)
                     {
                         content.put(format("<p>%s</p>\n", escapeHTML(comment)));
+                    }
+                    content.put("</div>\n");
+                }
+
+                if (cls.fields.length > 0)
+                {
+                    content.put("<div class=\"fields\">\n");
+                    content.put("<h4>Fields</h4>\n");
+                    content.put("<ul>\n");
+                    foreach (field; cls.fields)
+                    {
+                        content.put(format("<li><code>%s</code></li>\n", escapeHTML(field)));
+                    }
+                    content.put("</ul>\n");
+                    content.put("</div>\n");
+                }
+
+                if (cls.methods.length > 0)
+                {
+                    content.put("<div class=\"methods\">\n");
+                    content.put("<h4>Methods</h4>\n");
+                    foreach (func; cls.methods)
+                    {
+                        content.put("<div class=\"method-doc\">\n");
+                        content.put("<div class=\"signature\">\n");
+                        content.put(format("<span class=\"return-type\">%s</span> \n",
+                                escapeHTML(func.returnType)));
+                        content.put(format("<span class=\"function-name\">%s</span>",
+                                escapeHTML(func.name)));
+                        content.put("<span class=\"parameters\">(");
+
+                        foreach (i, param; func.parameters)
+                        {
+                            if (i > 0)
+                                content.put(", ");
+                            content.put(escapeHTML(param));
+                        }
+
+                        content.put(")</span>\n");
+                        content.put("</div>\n");
+
+                        if (func.comments.length > 0)
+                        {
+                            content.put("<div class=\"description\">\n");
+                            foreach (comment; func.comments)
+                            {
+                                content.put(format("<p>%s</p>\n", escapeHTML(comment)));
+                            }
+                            content.put("</div>\n");
+                        }
+                        content.put("</div>\n");
                     }
                     content.put("</div>\n");
                 }
