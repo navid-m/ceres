@@ -32,13 +32,15 @@
                         Back to Index
                     </a>
                     <div class="flex items-center gap-4">
-                        <label class="flex items-center gap-2 text-gray-300 cursor-pointer hover:text-white transition-colors">
-                            <input type="checkbox" id="hide-private-functions-checkbox" class="rounded text-blue-500 focus:ring-blue-400">
-                            <span class="select-none">Hide Private Functions</span>
+                        <label class="inline-flex items-center cursor-pointer group">
+                            <input type="checkbox" id="hide-private-functions-checkbox" class="sr-only peer" checked>
+                            <div class="relative w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            <span class="ms-3 text-sm font-medium text-gray-300 group-hover:text-white transition-colors select-none">Hide Private Functions</span>
                         </label>
-                        <label class="flex items-center gap-2 text-gray-300 cursor-pointer hover:text-white transition-colors">
-                            <input type="checkbox" id="hide-private-fields-checkbox" class="rounded text-blue-500 focus:ring-blue-400">
-                            <span class="select-none">Hide Private Attributes</span>
+                        <label class="inline-flex items-center cursor-pointer group">
+                            <input type="checkbox" id="hide-private-fields-checkbox" class="sr-only peer" checked>
+                            <div class="relative w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            <span class="ms-3 text-sm font-medium text-gray-300 group-hover:text-white transition-colors select-none">Hide Private Attributes</span>
                         </label>
                         <div class="relative w-64">
                             <input type="text" id="global-search" placeholder="Search docs..." class="w-full bg-gray-900 border border-border-color rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 placeholder-gray-500">
@@ -95,37 +97,22 @@
             }
         });
 
-        const hidePrivateFunctionsCheckbox = document.getElementById('hide-private-functions-checkbox');
-        if (hidePrivateFunctionsCheckbox) {
-            hidePrivateFunctionsCheckbox.addEventListener('change', function() {
-                const privateFunctions = document.querySelectorAll('.private-function, .private-method');
-                const showPrivateFunctions = !this.checked;
+        function togglePrivateElements(checkboxId, selector) {
+            const checkbox = document.getElementById(checkboxId);
+            if (!checkbox) return;
 
-                privateFunctions.forEach(function(element) {
-                    if (showPrivateFunctions) {
-                        element.style.display = '';
-                    } else {
-                        element.style.display = 'none';
-                    }
-                });
-            });
+            const updateVisibility = () => {
+                const elements = document.querySelectorAll(selector);
+                const show = !checkbox.checked;
+                elements.forEach(el => el.style.display = show ? '' : 'none');
+            };
+
+            checkbox.addEventListener('change', updateVisibility);
+            updateVisibility();
         }
 
-        const hidePrivateFieldsCheckbox = document.getElementById('hide-private-fields-checkbox');
-        if (hidePrivateFieldsCheckbox) {
-            hidePrivateFieldsCheckbox.addEventListener('change', function() {
-                const privateFields = document.querySelectorAll('.private-field');
-                const showPrivateFields = !this.checked;
-
-                privateFields.forEach(function(element) {
-                    if (showPrivateFields) {
-                        element.style.display = '';
-                    } else {
-                        element.style.display = 'none';
-                    }
-                });
-            });
-        }
+        togglePrivateElements('hide-private-functions-checkbox', '.private-function, .private-method');
+        togglePrivateElements('hide-private-fields-checkbox', '.private-field');
     </script>
 </body>
 </html>
