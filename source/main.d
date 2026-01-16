@@ -855,7 +855,8 @@ class Parser
                     }
                     else if (ln.length > 0 && !ln.startsWith("//")
                             && !ln.startsWith("}") && !ln.startsWith("{")
-                            && !ln.startsWith("import ") && braceBalance == 1 && ln.endsWith(";"))
+                            && !ln.startsWith("import ") && !ln.startsWith("[")
+                            && braceBalance == 1 && ln.endsWith(";"))
                     {
                         FieldDoc fieldDoc;
                         fieldDoc.declaration = ln;
