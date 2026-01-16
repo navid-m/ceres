@@ -855,8 +855,7 @@ class Parser
                     }
                     else if (ln.length > 0 && !ln.startsWith("//")
                             && !ln.startsWith("}") && !ln.startsWith("{")
-                            && !ln.startsWith("import ")
-                            && braceBalance == 1 && ln.endsWith(";"))
+                            && !ln.startsWith("import ") && braceBalance == 1 && ln.endsWith(";"))
                     {
                         FieldDoc fieldDoc;
                         fieldDoc.declaration = ln;
@@ -1686,4 +1685,30 @@ private string toTitleCase(string input)
     }
 
     return titleCasedWords.join(" ");
+}
+
+unittest
+{
+    string source = q{
+        module test.mod;
+
+        /// This is a test function
+        void testFunc() {}
+
+        /**
+         * A test class
+         */
+        class TestClass {}
+    };
+
+    Parser parser = new Parser(source);
+    ModuleDoc doc = parser.parse("source/test.d");
+
+    assert(doc.name == "test.mod");
+    assert(doc.functions.length == 1);
+    assert(doc.functions[0].name == "testFunc");
+    assert(doc.functions[0].comments[0] == "This is a test function");
+    assert(doc.classes.length == 1);
+    assert(doc.classes[0].name == "TestClass");
+    assert(doc.classes[0].comments[1] == "A test class");
 }
