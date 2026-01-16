@@ -1586,7 +1586,7 @@ void main(string[] args)
 
     if (args.canFind("--version") || args.canFind("-v"))
     {
-        writeln("v0.0.3");
+        writeln("v0.0.4");
         return;
     }
 
