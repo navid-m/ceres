@@ -91,6 +91,7 @@ class Parser
     private string[] lines;
     private size_t currentLine;
     private string[] lastDocComment;
+    private bool insideUnittestBlock = false;
 
     /**
      * Construct a new parser instance
@@ -121,16 +122,56 @@ class Parser
 
         string[] pendingComments;
 
+        long unittestBraceLevel = 0;
+
         for (currentLine = 0; currentLine < lines.length; currentLine++)
         {
             string line = lines[currentLine].strip();
+
+            if (line.startsWith("unittest") && !insideUnittestBlock)
+            {
+                insideUnittestBlock = true;
+                unittestBraceLevel = 0;
+
+                long lineBraceBalance = calculateBraceBalance(line);
+                unittestBraceLevel += (lineBraceBalance > 0) ? lineBraceBalance : 0;
+
+                if (line.canFind("{"))
+                {
+                    unittestBraceLevel++;
+                }
+                continue;
+            }
+
+            if (insideUnittestBlock)
+            {
+                long openBraces = 0;
+                long closeBraces = 0;
+
+                foreach (ch; line)
+                {
+                    if (ch == '{')
+                        openBraces++;
+                    else if (ch == '}')
+                        closeBraces++;
+                }
+
+                unittestBraceLevel += openBraces - closeBraces;
+
+                if (unittestBraceLevel <= 0)
+                {
+                    insideUnittestBlock = false;
+                    unittestBraceLevel = 0;
+                }
+                continue;
+            }
 
             if (line.strip() == "/// ditto")
             {
                 pendingComments = lastDocComment.dup;
             }
             else if (line.startsWith("///") || line.startsWith("/**")
-                    || line.startsWith("/*") || line.startsWith("/+") || line.startsWith("/++"))
+                || line.startsWith("/*") || line.startsWith("/+") || line.startsWith("/++"))
             {
                 pendingComments = [];
                 pendingComments ~= extractComment(line);
@@ -187,7 +228,7 @@ class Parser
             else if (line.length > 0 && !line.startsWith("//"))
             {
                 if (line.startsWith("class ") || line.startsWith("struct ")
-                        || line.startsWith("interface "))
+                    || line.startsWith("interface "))
                 {
                     auto classDoc = parseClass(line, pendingComments);
                     if (classDoc.name.length > 0)
@@ -257,13 +298,13 @@ class Parser
         return doc;
     }
 
-    /** 
+    /**
      * Extract some comment from a line.
      *
      * Params:
      *   line = The line in question
-     * 
-     * Returns: The corresponding comment 
+     *
+     * Returns: The corresponding comment
      */
     private string extractComment(string line)
     {
@@ -318,13 +359,13 @@ class Parser
         return line.strip();
     }
 
-    /** 
+    /**
      * Extract the module name given the filepath.
      *
      * Params:
      *   filepath = The filepath of the source file
-     * 
-     * Returns: The module name 
+     *
+     * Returns: The module name
      */
     private string extractModuleName(string filepath) => baseName(filepath, ".d");
 
@@ -351,33 +392,33 @@ class Parser
         string trimmed = line.strip();
 
         if (trimmed.startsWith("this(") || trimmed.startsWith("~this(")
-                || trimmed.startsWith("public this(") || trimmed.startsWith("private this(")
-                || trimmed.startsWith("protected this("))
+            || trimmed.startsWith("public this(") || trimmed.startsWith("private this(")
+            || trimmed.startsWith("protected this("))
         {
             return true;
         }
 
         if (trimmed.startsWith("if") || trimmed.startsWith("while")
-                || trimmed.startsWith("for") || trimmed.startsWith("switch") || trimmed.startsWith("foreach")
-                || trimmed.startsWith("return") || trimmed.startsWith("assert") || trimmed.startsWith("else")
-                || trimmed.startsWith("import ") || trimmed.startsWith("module ") || trimmed.startsWith("struct ")
-                || trimmed.startsWith("class ") || trimmed.startsWith("interface ")
-                || trimmed.startsWith("enum ") || trimmed.startsWith("union "))
+            || trimmed.startsWith("for") || trimmed.startsWith("switch") || trimmed.startsWith("foreach")
+            || trimmed.startsWith("return") || trimmed.startsWith("assert") || trimmed.startsWith("else")
+            || trimmed.startsWith("import ") || trimmed.startsWith("module ") || trimmed.startsWith("struct ")
+            || trimmed.startsWith("class ") || trimmed.startsWith("interface ")
+            || trimmed.startsWith("enum ") || trimmed.startsWith("union "))
         {
             return false;
         }
 
         if (trimmed.indexOf("=") != -1
-                && trimmed.indexOf("=") < trimmed.indexOf("(") && !trimmed.startsWith("="))
+            && trimmed.indexOf("=") < trimmed.indexOf("(") && !trimmed.startsWith("="))
             return false;
 
         if (trimmed.count("=") > 0 && trimmed.indexOf("=") < trimmed.indexOf("(")
-                && !trimmed.startsWith("auto ") && !trimmed.startsWith("void ")
-                && !trimmed.startsWith("int ") && !trimmed.startsWith("string ")
-                && !trimmed.startsWith("bool ") && !trimmed.startsWith("float ")
-                && !trimmed.startsWith("double ") && !trimmed.startsWith("char ")
-                && !trimmed.startsWith("byte ") && !trimmed.startsWith("short ")
-                && !trimmed.startsWith("long ") && !trimmed.startsWith("real "))
+            && !trimmed.startsWith("auto ") && !trimmed.startsWith("void ")
+            && !trimmed.startsWith("int ") && !trimmed.startsWith("string ")
+            && !trimmed.startsWith("bool ") && !trimmed.startsWith("float ")
+            && !trimmed.startsWith("double ") && !trimmed.startsWith("char ")
+            && !trimmed.startsWith("byte ") && !trimmed.startsWith("short ")
+            && !trimmed.startsWith("long ") && !trimmed.startsWith("real "))
         {
             return false;
         }
@@ -469,9 +510,9 @@ class Parser
         string trimmed = line.strip();
         doc.isPrivate = trimmed.startsWith("private ") || trimmed.startsWith("private static ")
             || trimmed.startsWith("private final ") || trimmed.startsWith(
-                    "private override ") || trimmed.startsWith("private abstract ")
+                "private override ") || trimmed.startsWith("private abstract ")
             || trimmed.startsWith("private const ") || trimmed.startsWith(
-                    "private immutable ") || trimmed.startsWith("private shared ")
+                "private immutable ") || trimmed.startsWith("private shared ")
             || trimmed.startsWith("private pure ") || trimmed.startsWith("private nothrow ")
             || (trimmed.startsWith("private") && !trimmed.startsWith("private("));
 
@@ -514,7 +555,7 @@ class Parser
         try
         {
             if (line.length >= parenPos + 1 && line.length >= closeParenPos
-                    && parenPos + 1 < closeParenPos)
+                && parenPos + 1 < closeParenPos)
             {
                 auto paramsStr = line[parenPos + 1 .. closeParenPos].strip();
                 if (paramsStr.length > 0)
@@ -638,14 +679,14 @@ class Parser
                         memberComments = lastMemberDocComment.dup;
                     }
                     else if (ln.startsWith("///") || ln.startsWith("/**")
-                            || ln.startsWith("/*") || ln.startsWith("/+") || ln.startsWith("/++"))
+                        || ln.startsWith("/*") || ln.startsWith("/+") || ln.startsWith("/++"))
                     {
                         memberComments = [];
                         memberComments ~= extractComment(ln);
                         if (ln.startsWith("/**") || ln.startsWith("/*"))
                         {
                             while (currentLine < lines.length
-                                    && !lines[currentLine].strip().endsWith("*/"))
+                                && !lines[currentLine].strip().endsWith("*/"))
                             {
                                 currentLine++;
                                 if (currentLine < lines.length)
@@ -690,7 +731,7 @@ class Parser
                         }
                     }
                     else if (ln.length > 0 && !ln.startsWith("//")
-                            && !ln.startsWith("}") && !ln.startsWith("{"))
+                        && !ln.startsWith("}") && !ln.startsWith("{"))
                     {
                         EnumMemberDoc member;
                         string memberDecl = ln;
@@ -782,14 +823,14 @@ class Parser
                         memberComments = lastMemberDocComment.dup;
                     }
                     else if (ln.startsWith("///") || ln.startsWith("/**")
-                            || ln.startsWith("/*") || ln.startsWith("/+") || ln.startsWith("/++"))
+                        || ln.startsWith("/*") || ln.startsWith("/+") || ln.startsWith("/++"))
                     {
                         memberComments = [];
                         memberComments ~= extractComment(ln);
                         if (ln.startsWith("/**") || ln.startsWith("/*"))
                         {
                             while (currentLine < lines.length
-                                    && !lines[currentLine].strip().endsWith("*/"))
+                                && !lines[currentLine].strip().endsWith("*/"))
                             {
                                 currentLine++;
                                 if (currentLine < lines.length)
@@ -848,15 +889,15 @@ class Parser
                         }
                     }
                     else if (ln.startsWith("class ") || ln.startsWith("struct ")
-                            || ln.startsWith("interface ") || ln.startsWith("enum "))
+                        || ln.startsWith("interface ") || ln.startsWith("enum "))
                     {
                         memberComments = [];
                         lastMemberDocComment = [];
                     }
                     else if (ln.length > 0 && !ln.startsWith("//")
-                            && !ln.startsWith("}") && !ln.startsWith("{")
-                            && !ln.startsWith("import ") && !ln.startsWith("[")
-                            && braceBalance == 1 && ln.endsWith(";"))
+                        && !ln.startsWith("}") && !ln.startsWith("{")
+                        && !ln.startsWith("import ") && !ln.startsWith("[")
+                        && braceBalance == 1 && ln.endsWith(";"))
                     {
                         FieldDoc fieldDoc;
                         fieldDoc.declaration = ln;
@@ -1084,7 +1125,7 @@ class HTMLGenerator
         if (mod.comments.length > 0)
         {
             content.put(
-                    "<section class=\"bg-card-bg rounded-xl p-6 shadow-lg border border-border-color\">\n");
+                "<section class=\"bg-card-bg rounded-xl p-6 shadow-lg border border-border-color\">\n");
             content.put("<div class=\"prose prose-invert max-w-none\">\n");
             content.put(formatComment(mod.comments, mod.name));
             content.put("</div>\n");
@@ -1094,7 +1135,7 @@ class HTMLGenerator
         if (mod.classes.length > 0)
         {
             content.put(
-                    "<section class=\"bg-card-bg rounded-xl shadow-lg border border-border-color overflow-hidden\">\n");
+                "<section class=\"bg-card-bg rounded-xl shadow-lg border border-border-color overflow-hidden\">\n");
             content.put("<div class=\"p-6 space-y-6\">\n");
 
             foreach (cls; mod.classes)
@@ -1119,7 +1160,7 @@ class HTMLGenerator
                 {
                     content.put("<div class=\"mt-4\">\n");
                     content.put(
-                            "<h4 class=\"text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2\">Fields</h4>\n");
+                        "<h4 class=\"text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2\">Fields</h4>\n");
                     content.put("<div class=\"space-y-2\">\n");
                     foreach (field; cls.fields)
                     {
@@ -1136,7 +1177,7 @@ class HTMLGenerator
                 {
                     content.put("<div class=\"mt-4\">\n");
                     content.put(
-                            "<h4 class=\"text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3\">Methods</h4>\n");
+                        "<h4 class=\"text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3\">Methods</h4>\n");
                     content.put("<div class=\"space-y-3\">\n");
                     foreach (func; cls.methods)
                     {
@@ -1184,7 +1225,7 @@ class HTMLGenerator
         if (mod.enums.length > 0)
         {
             content.put(
-                    "<section class=\"bg-card-bg rounded-xl shadow-lg border border-border-color overflow-hidden\">\n");
+                "<section class=\"bg-card-bg rounded-xl shadow-lg border border-border-color overflow-hidden\">\n");
             content.put("<div class=\"p-6 space-y-6\">\n");
 
             foreach (en; mod.enums)
@@ -1194,7 +1235,7 @@ class HTMLGenerator
                         "<h3 id=\"%s\" class=\"text-xl font-semibold text-cyan-400 mb-3 flex items-center gap-2\">\n",
                         escapeHTML(en.name)));
                 content.put(
-                        "<span class=\"text-gray-500 text-sm font-normal uppercase tracking-wide\">ENUM</span>\n");
+                    "<span class=\"text-gray-500 text-sm font-normal uppercase tracking-wide\">ENUM</span>\n");
                 content.put(escapeHTML(en.name) ~ "\n");
                 content.put("</h3>\n");
 
@@ -1209,7 +1250,7 @@ class HTMLGenerator
                 {
                     content.put("<div class=\"mt-4\">\n");
                     content.put(
-                            "<h4 class=\"text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2\">Members</h4>\n");
+                        "<h4 class=\"text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2\">Members</h4>\n");
                     content.put("<div class=\"space-y-2\">\n");
                     foreach (member; en.members)
                     {
@@ -1225,7 +1266,7 @@ class HTMLGenerator
                         if (member.comments.length > 0)
                         {
                             content.put(
-                                    "<div class=\"mt-2 pl-3 border-l border-blue-500/50 text-gray-400\">\n");
+                                "<div class=\"mt-2 pl-3 border-l border-blue-500/50 text-gray-400\">\n");
                             content.put(formatComment(member.comments, mod.name));
                             content.put("</div>\n");
                         }
@@ -1245,7 +1286,7 @@ class HTMLGenerator
         if (mod.functions.length > 0)
         {
             content.put(
-                    "<section class=\"bg-card-bg rounded-xl shadow-lg border border-border-color overflow-hidden\">\n");
+                "<section class=\"bg-card-bg rounded-xl shadow-lg border border-border-color overflow-hidden\">\n");
             content.put("<div class=\"p-6 space-y-4\">\n");
 
             foreach (func; mod.functions)
@@ -1324,7 +1365,7 @@ class HTMLGenerator
                 insideParams = true;
                 app.put("<div class=\"font-bold text-gray-200 mt-4 mb-2\">Params:</div>\n");
                 app.put(
-                        "<table class=\"w-full text-left border-collapse mb-4 border border-gray-600\">\n<tbody>\n");
+                    "<table class=\"w-full text-left border-collapse mb-4 border border-gray-600\">\n<tbody>\n");
                 continue;
             }
 
@@ -1378,7 +1419,7 @@ class HTMLGenerator
     private string escapeHTML(string text)
     {
         return text.replace("&", "&amp;").replace("<", "&lt;").replace(">",
-                "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
+            "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
     }
 
     private string sanitizeFilename(string name)
@@ -1663,7 +1704,7 @@ void main(string[] args)
     writeln("Generating documentation in ./", outputDir);
 
     auto generator = new HTMLGenerator(modules, outputDir,
-            toTitleCase(projectInfo.projectName), projectInfo.licenseType);
+        toTitleCase(projectInfo.projectName), projectInfo.licenseType);
     generator.generate();
 
     writeln("Documentation generated successfully.");
