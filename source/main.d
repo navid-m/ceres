@@ -458,7 +458,7 @@ class Parser
                         || checkType == "char" || checkType == "byte" || checkType == "short"
                         || checkType == "long" || checkType == "float"
                         || checkType == "double" || checkType == "real"
-                        || checkType == "auto" || checkType.startsWith("@")); // Custom attributes
+                        || checkType == "auto" || checkType.startsWith("@"));
 
                 if (isFirstWordType && isValidIdentifier(funcName))
                 {
